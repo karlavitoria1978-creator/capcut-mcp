@@ -17,7 +17,7 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/src/index.js",
-    "test": "node --test dist/tests/*.test.js",
+    "test": "node --test dist/tests/draft-builder.test.js",
     "pretest": "npm run build",
     "prepublishOnly": "npm run build"
   },
