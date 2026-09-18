@@ -1,26 +1,94 @@
-# CapCut Desktop MCP Server 🎬
+# CapCut Desktop MCP Server & Agent Skills 🎬
 
-[![CI](https://github.com/capcut-mcp/capcut-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/capcut-mcp/capcut-mcp/actions/workflows/ci.yml)
+[![CI](https://github.com/AiPersonacademy/capcut-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/AiPersonacademy/capcut-mcp/actions/workflows/ci.yml)
+[![GitHub Stars](https://img.shields.io/github/stars/AiPersonacademy/capcut-mcp?style=social)](https://github.com/AiPersonacademy/capcut-mcp)
+[![GitHub Forks](https://img.shields.io/github/forks/AiPersonacademy/capcut-mcp?style=social)](https://github.com/AiPersonacademy/capcut-mcp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org/)
 [![Model Context Protocol](https://img.shields.io/badge/MCP-1.6.1-blue)](https://modelcontextprotocol.io/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue)](https://www.typescriptlang.org/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-An enterprise-grade **Model Context Protocol (MCP)** server that enables AI agents (Claude Desktop, Cursor, Google Antigravity, Cline, Windsurf) to programmatically edit videos in **CapCut Desktop** and **JianYing Pro (剪映)**.
-
-CapCut MCP bypasses brittle GUI macros and mouse automation by directly constructing CapCut's native `draft_content.json` Abstract Syntax Tree (AST). Edits apply instantaneously, deterministically, and with zero window focus or keyboard hijacking.
+> **Enterprise-grade Model Context Protocol (MCP) server & Agent Skills for CapCut Desktop & JianYing Pro (剪映)**.  
+> Programmatic video editing, multi-track timeline construction, Quad Ease keyframing, and viral typography for **Claude Desktop**, **Cursor AI**, **Google Antigravity**, **Cline**, and **Windsurf**.
 
 ---
 
-## ✨ Features
+## 📑 Table of Contents
 
-- **24 Atomic Video Editing Tools**: Complete control over projects, multi-track timelines, transformations, speed scaling, audio fades, subtitles, and keyframes.
-- **Native Desktop Integration**: Automatically detects and edits projects in **CapCut Global** and **JianYing Pro** across Windows and macOS.
-- **Multi-Track Orchestration**: Base A-roll, overlay B-roll layers, audio ducking, sound effects, and text caption tracks.
-- **Viral Typography Engine**: Built-in support for high-retention short-form styles (Style 6 Glow Pop, Style 7 Hero Typography, -1.0 tracking, drop shadows, and scale pop animations).
-- **Mathematical Keyframing & Easing**: Quad Ease Out, smooth scale zooms, opacity transitions, and position pans.
-- **Headless Proxy Previews**: Generate fast proxy preview MP4s using FFmpeg without opening the CapCut GUI.
-- **Agent Skills Included**: Production-tested agent skills and prompt playbooks in `skills/capcut/`.
+- [Why CapCut MCP?](#-why-capcut-mcp)
+- [Architecture & Direct AST Engine](#-architecture--direct-ast-engine)
+- [Key Features](#-key-features)
+- [Quick Start](#-quick-start)
+- [Client Configuration](#-client-configuration)
+  - [Claude Desktop](#claude-desktop)
+  - [Cursor AI](#cursor-ai)
+  - [Google Antigravity](#google-antigravity)
+  - [Windsurf & Cline](#windsurf--cline)
+- [MCP Tools Reference (24 Atomic Tools)](#-mcp-tools-reference-24-atomic-tools)
+- [Viral Typography Engine](#-viral-typography-engine)
+- [AI Agent Skills & Editorial Playbooks](#-ai-agent-skills--editorial-playbooks)
+- [Testing & Quality Assurance](#-testing--quality-assurance)
+- [Contributing](#-contributing)
+- [License](#-license)
+
+---
+
+## 💡 Why CapCut MCP?
+
+Traditional AI video editing attempts rely on brittle GUI automation: simulating mouse clicks, keystrokes, and window focusing that fail when UI elements shift or screen resolutions vary.
+
+**CapCut MCP takes an entirely different approach:**
+- **Direct AST Manipulation**: It reads and writes directly to CapCut's native `draft_content.json` Abstract Syntax Tree (AST).
+- **Instant & Deterministic**: Timelines, multi-track sequences, cuts, speed ramps, and keyframes apply in milliseconds without opening the GUI.
+- **Cross-Platform**: Works natively with both **CapCut Global** and **JianYing Pro (剪映)** on Windows and macOS.
+- **Zero Window Focus**: Edits run cleanly in the background while you continue working.
+
+---
+
+## 📐 Architecture & Direct AST Engine
+
+```
+User Prompt (e.g. "Cut dead air, add viral captions, punch zoom on keywords")
+                                │
+                                ▼
+         AI Agent (Claude Desktop / Cursor / Antigravity)
+                                │
+                                ▼ (Model Context Protocol JSON-RPC)
+                        capcut-mcp-server
+                                │
+        ┌───────────────────────┼───────────────────────┐
+        ▼                       ▼                       ▼
+CapCut Path Resolver     Media Probe (FFprobe)    Draft Manager
+(CapCut Global / JianYing)                              │
+                                                        ▼
+                                                  Draft Builder
+                                             (Native AST Generator)
+                                                        │
+                                                        ▼
+                                          CapCut Project Directory
+                                         (%LOCALAPPDATA%/CapCut/...)
+                                                        │
+                                                        ▼
+                                       Native CapCut Project Ready
+```
+
+1. **`paths.ts`**: Dynamically detects CapCut Global or JianYing Pro directories without hardcoded user paths.
+2. **`draft-builder.ts`**: Pure deterministic constructor for clips, keyframes, transitions, text materials, and multi-track audio.
+3. **`draft-manager.ts`**: High-level timeline orchestrator providing safe atomic file writes and project registration.
+4. **`preview-renderer.ts`**: Generates headless proxy MP4 previews via FFmpeg without launching the CapCut application.
+
+---
+
+## ✨ Key Features
+
+- 🎬 **24 Atomic Video Editing Tools**: Complete programmatic control over projects, multi-track timelines, transformations, speed scaling, audio fades, subtitles, and keyframes.
+- ⚡ **Multi-Track Orchestration**: Base A-roll, overlay B-roll layers, background music with audio ducking (-12dB), sound effects, and text caption tracks.
+- 🔥 **Viral Typography Engine**: Built-in support for high-retention short-form styles (Style 6 Glow Pop, Style 7 Hero Typography, -1.0 metric tracking, ambient drop shadows, and scale pop animations).
+- 📈 **Mathematical Keyframing & Easing**: Quad Ease Out curves, kinetic punch-in zooms, smooth opacity transitions, and position pans.
+- 🎯 **Synchronized Subtitles**: Parse and import standard SRT files directly into formatted native CapCut text layers.
+- 🖼️ **Fast Headless Previews**: Render fast proxy preview MP4s using FFmpeg without opening the CapCut GUI.
+- 🤖 **Production Agent Skills Included**: Battle-tested prompt playbooks and references in `skills/capcut/` covering Walter Murch's Rule of Six, B-roll sourcing, and Quad Easing.
 
 ---
 
@@ -29,17 +97,17 @@ CapCut MCP bypasses brittle GUI macros and mouse automation by directly construc
 ### 1. Global Installation (Recommended)
 
 ```bash
-# Run directly with npx
+# Run directly via npx
 npx capcut-mcp-server
 
-# Or install globally
+# Or install globally via npm
 npm install -g capcut-mcp-server
 ```
 
 ### 2. Run from Source
 
 ```bash
-git clone https://github.com/capcut-mcp/capcut-mcp.git
+git clone https://github.com/AiPersonacademy/capcut-mcp.git
 cd capcut-mcp
 npm install
 npm run build
@@ -53,7 +121,7 @@ npm start
 
 ### Claude Desktop
 
-Add the following to your `claude_desktop_config.json`:
+Add this configuration to your `claude_desktop_config.json`:
 
 ```json
 {
@@ -66,30 +134,13 @@ Add the following to your `claude_desktop_config.json`:
 }
 ```
 
-*File location:*
+*Config file locations:*
 - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 
 ---
 
-### Google Antigravity
-
-Add to your `mcp_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "capcut": {
-      "command": "node",
-      "args": ["<PATH_TO_CAPCUT_MCP>/dist/src/index.js"]
-    }
-  }
-}
-```
-
----
-
-### Cursor / Windsurf
+### Cursor AI
 
 Add to your `.cursor/mcp.json` or global MCP settings:
 
@@ -106,95 +157,151 @@ Add to your `.cursor/mcp.json` or global MCP settings:
 
 ---
 
-## 🛠️ MCP Tools Reference (24 Tools)
+### Google Antigravity
+
+Add to your `mcp_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "capcut": {
+      "command": "node",
+      "args": ["<ABSOLUTE_PATH_TO_CAPCUT_MCP>/dist/src/index.js"]
+    }
+  }
+}
+```
+
+---
+
+### Windsurf & Cline
+
+Configure the stdio command:
+
+```json
+{
+  "mcpServers": {
+    "capcut": {
+      "command": "npx",
+      "args": ["-y", "capcut-mcp-server"]
+    }
+  }
+}
+```
+
+---
+
+## 🛠️ MCP Tools Reference (24 Atomic Tools)
 
 | Tool Name | Category | Description | Key Parameters |
 |:---|:---|:---|:---|
-| `capcut_list_projects` | Projects | List all local CapCut projects with metadata | *None* |
-| `capcut_get_project` | Projects | Fetch timeline tracks, materials, and duration | `project_name_or_id` |
-| `capcut_create_project` | Projects | Create a new project draft | `project_name`, `width`, `height` |
-| `capcut_duplicate_project` | Projects | Clone an existing draft | `source_project_name_or_id`, `new_project_name` |
-| `capcut_delete_project` | Projects | Delete a project folder | `project_name_or_id` |
-| `capcut_open_app` | Projects | Launch CapCut Desktop with a specific draft | `project_name_or_id` |
-| `capcut_add_video_clip` | Timeline | Append or insert a video clip on any track | `project_name_or_id`, `file_path`, `track_index`, `start_time` |
-| `capcut_add_audio_clip` | Audio | Add music or voiceover with volume control | `project_name_or_id`, `file_path`, `track_index`, `volume` |
-| `capcut_add_sound_effect` | Audio | Insert SFX (whoosh, pop, riser) at timestamp | `project_name_or_id`, `file_path`, `start_time` |
-| `capcut_add_audio_fade` | Audio | Apply fade-in and fade-out curves | `project_name_or_id`, `track_index`, `clip_index`, `fade_in`, `fade_out` |
-| `capcut_trim_clip` | Editing | Adjust in/out source points and target duration | `project_name_or_id`, `track_index`, `clip_index`, `source_start`, `source_duration` |
-| `capcut_split_clip` | Editing | Split a clip at a specific timeline timestamp | `project_name_or_id`, `track_index`, `clip_index`, `split_timestamp` |
-| `capcut_remove_clip` | Editing | Remove a clip from a track | `project_name_or_id`, `track_index`, `clip_index` |
-| `capcut_set_clip_transform` | Transform | Adjust position `(x, y)`, scale, and rotation | `project_name_or_id`, `track_index`, `clip_index`, `x`, `y`, `scale`, `rotation` |
-| `capcut_set_clip_speed` | Transform | Modify speed multiplier (0.1x to 100x) | `project_name_or_id`, `track_index`, `clip_index`, `speed`, `change_pitch` |
-| `capcut_add_keyframe` | Animation | Animate scale, position, or opacity | `project_name_or_id`, `track_index`, `clip_index`, `property`, `time_offset`, `value` |
-| `capcut_add_transition` | Transitions | Insert video transitions (dissolve, push, zoom) | `project_name_or_id`, `track_index`, `clip_index`, `transition_type`, `duration` |
-| `capcut_add_text` | Text | Add static text or lower thirds | `project_name_or_id`, `text`, `start_time`, `duration`, `font_size`, `color` |
-| `capcut_add_subtitles` | Text | Parse and import full SRT subtitle file | `project_name_or_id`, `srt_content`, `font_size`, `color` |
-| `capcut_add_viral_caption` | Text | Add dynamic animated caption with styles | `project_name_or_id`, `text`, `style_preset`, `highlight_word` |
-| `capcut_add_sticker` | Graphics | Place sticker or graphic overlay | `project_name_or_id`, `sticker_id`, `start_time`, `duration` |
-| `capcut_create_video_bridge` | Sequencing | Generate cross-scene sequence with audio ducking | `project_name_or_id`, `primary_clip`, `secondary_clip`, `bridge_transition` |
-| `capcut_get_media_info` | Utilities | Probe media duration, dimensions, codecs | `file_path` |
-| `capcut_generate_preview` | Utilities | Render headless proxy MP4 preview | `project_name_or_id`, `output_path`, `resolution` |
+| `capcut_list_projects` | Projects | Lists all local CapCut projects with duration, resolution, and track counts | *None* |
+| `capcut_get_project` | Projects | Fetches the full timeline structure, tracks, media materials, and duration | `project_name_or_id` |
+| `capcut_create_project` | Projects | Creates a new project draft with custom canvas dimensions (e.g. 1080x1920) | `name`, `width`, `height`, `ratio`, `fps` |
+| `capcut_duplicate_project` | Projects | Duplicates an existing project draft under a new name | `source_project_name_or_id`, `new_project_name` |
+| `capcut_delete_project` | Projects | Safely deletes a project folder from CapCut storage | `project_name_or_id` |
+| `capcut_open_app` | Projects | Launches CapCut Desktop or opens project directory in Explorer | `project_name_or_id` |
+| `capcut_add_video_clip` | Timeline | Inserts or appends a video clip onto any track index | `project_name_or_id`, `file_path`, `track_index`, `start_time` |
+| `capcut_add_audio_clip` | Audio | Adds background music or voiceover with volume control | `project_name_or_id`, `file_path`, `track_index`, `volume` |
+| `capcut_add_sound_effect` | Audio | Inserts SFX (whooshes, pops, risers, impacts) at exact timestamps | `project_name_or_id`, `file_path`, `start_time` |
+| `capcut_add_audio_fade` | Audio | Applies smooth fade-in and fade-out volume curves | `project_name_or_id`, `track_index`, `clip_index`, `fade_in`, `fade_out` |
+| `capcut_trim_clip` | Editing | Trims in/out source points and target duration of an existing clip | `project_name_or_id`, `track_index`, `clip_index`, `source_start`, `source_duration` |
+| `capcut_split_clip` | Editing | Splits a clip at an exact timeline timestamp | `project_name_or_id`, `track_index`, `clip_index`, `split_timestamp` |
+| `capcut_remove_clip` | Editing | Removes a specific clip from a timeline track | `project_name_or_id`, `track_index`, `clip_index` |
+| `capcut_set_clip_transform` | Transform | Adjusts 2D position `(x, y)`, scale multiplier, and rotation degrees | `project_name_or_id`, `track_index`, `clip_index`, `x`, `y`, `scale`, `rotation` |
+| `capcut_set_clip_speed` | Transform | Modifies speed multiplier (0.1x to 100.0x) with pitch preservation | `project_name_or_id`, `track_index`, `clip_index`, `speed`, `change_pitch` |
+| `capcut_add_keyframe` | Animation | Adds keyframe animation for scale, position, or opacity | `project_name_or_id`, `track_index`, `clip_index`, `property`, `time_offset`, `value` |
+| `capcut_add_transition` | Transitions | Adds native video transitions (dissolve, push, zoom, wipe) | `project_name_or_id`, `track_index`, `clip_index`, `transition_type`, `duration` |
+| `capcut_add_text` | Text | Injects static text, titles, or lower thirds | `project_name_or_id`, `text`, `start_time`, `duration`, `font_size`, `color` |
+| `capcut_add_subtitles` | Text | Parses and imports complete SRT subtitle files into text tracks | `project_name_or_id`, `srt_content`, `font_size`, `color` |
+| `capcut_add_viral_caption` | Text | Adds viral dynamic caption with accent words and hover-pop animations | `project_name_or_id`, `text`, `power_words`, `accent_color`, `font_family` |
+| `capcut_add_sticker` | Graphics | Places graphic stickers or overlays on the timeline | `project_name_or_id`, `sticker_id`, `start_time`, `duration` |
+| `capcut_create_video_bridge` | Sequencing | Creates a multi-track sequenced project with video plates & audio ducking | `project_name`, `video_plate_path`, `audio_tracks`, `subtitles_srt_path` |
+| `capcut_get_media_info` | Utilities | Probes video/audio resolution, duration, codecs, and framerate | `file_path` |
+| `capcut_generate_preview` | Utilities | Generates a fast proxy preview MP4 via headless FFmpeg | `project_name_or_id`, `output_path`, `resolution` |
 
 ---
 
-## 🧠 Using with AI Agents (Skill Integration)
+## 🎨 Viral Typography Engine
 
-This repository includes an Agent Skill located at `skills/capcut/SKILL.md`.
+Short-form retention depends on visual stimulation and dynamic typography. CapCut MCP comes with pre-calibrated viral styles accessible via `capcut_add_viral_caption`:
 
-To equip your AI assistant with the editing playbook:
-1. **Antigravity / Gemini CLI**: Copy the `skills/capcut` directory into your project's `.agents/skills/` directory.
-2. **Claude Desktop / Cursor**: Reference `skills/capcut/SKILL.md` in your project prompt or `.cursorrules`.
+### Style 6: Glow Pop
+- **Font**: Montserrat ExtraBold / Impact
+- **Primary Color**: High-saturation electric yellow (`#FFE600`) or lime (`#00FF66`)
+- **Stroke**: Heavy black outline (`#000000`, width `12-16`)
+- **Drop Shadow**: Ambient soft blur
+- **Pop Motion**: Scale burst (1.15x -> 1.0x) over 120ms at word boundary
 
-The skill provides guidelines on:
-- Walter Murch's Rule of Six editing principles.
-- Microsecond timeline arithmetic and track collision prevention.
-- High-retention short-form typography (Styles 6 and 7).
-- Quad Easing curves for kinetic punch-in zooms.
-
----
-
-## 📐 Architecture
-
-```
-User Prompt -> AI Agent (Claude/Cursor/Antigravity)
-                     │
-                     ▼ (Model Context Protocol JSON-RPC)
-             capcut-mcp-server
-                     │
-     ┌───────────────┼───────────────┐
-     ▼               ▼               ▼
-Paths Resolver   Media Probe   Draft Manager
-(CapCut/JianYing) (FFprobe)          │
-                                     ▼
-                               Draft Builder
-                               (Direct AST)
-                                     │
-                                     ▼
-                      CapCut Desktop Draft Storage
-                      (%LOCALAPPDATA%/CapCut/...)
-                                     │
-                                     ▼
-                           Native CapCut Project
-```
-
-1. **Deterministic AST Generation**: Instead of automating the GUI, the server reads and writes CapCut's internal `draft_content.json` structure.
-2. **Safe Atomic Writes**: Modifications create valid draft trees with all required material references, tracks, and segment IDs.
-3. **Cross-Platform**: Dynamically resolves default project directories on Windows and macOS for both international CapCut and Chinese JianYing Pro.
+### Style 7: Hero Typography
+- **Character Spacing**: `-1.0` metric tracking (tight, cinematic feel)
+- **Casing**: Uppercase
+- **Shadow Offset**: `(26, 26)` with 85% opacity
+- **Color Accent**: Single focal word highlighted in cyan (`#00E5FF`) or electric magenta (`#FF0055`)
 
 ---
 
-## 🧪 Testing
+## 🤖 AI Agent Skills & Editorial Playbooks
 
-The repository features an automated test suite verifying timeline generation, track collisions, transformations, speed scaling, and SRT subtitle ingestion:
+This repository includes a dedicated Agent Skill located at [`skills/capcut/SKILL.md`](skills/capcut/SKILL.md).
+
+When connected to an AI agent, the agent can autonomously follow the **Autonomous Editing Playbook**:
+1. **Probe**: Inspect raw files with `capcut_get_media_info`.
+2. **Scaffold**: Create the project canvas with `capcut_create_project`.
+3. **Assemble A-Roll**: Place primary speech clips on Track 0 with `capcut_add_video_clip`.
+4. **Synchronize Subtitles**: Inject timed captions with `capcut_add_subtitles` or kinetic titles with `capcut_add_viral_caption`.
+5. **Overlay B-Roll**: Insert relevant visual cutaways on Track 1 with punch-in zoom keyframes.
+6. **Sound Design**: Add background music (ducked to -12dB) with `capcut_add_audio_clip` and impact transients with `capcut_add_sound_effect`.
+7. **Review**: Generate an instant proxy preview with `capcut_generate_preview` or open CapCut Desktop with `capcut_open_app`.
+
+For comprehensive editorial reference manuals, see:
+- [CapCut Master Manual](skills/capcut/references/capcut_master_manual.md)
+- [B-Roll Production Manual](skills/capcut/references/broll_production_manual.md)
+
+---
+
+## 🧪 Testing & Quality Assurance
+
+The test suite validates timeline calculations, AST segment generation, track collisions, speed scaling, and SRT subtitle ingestion:
 
 ```bash
 npm test
 ```
 
-All 21 tests execute against synthetic audio/video clips generated on-the-fly in an isolated temporary directory.
+```
+▶ CapCut MCP Server - Comprehensive Suite
+  ✔ SrtParser parses standard SRT format accurately (3.0ms)
+  ✔ DraftManager creates a 9:16 project and registers in root meta (46.1ms)
+  ✔ MediaProbe and addVideoClip with synthetic video (219.5ms)
+  ✔ DraftManager adds audio clip (133.6ms)
+  ✔ DraftManager sets clip transform (24.3ms)
+  ✔ DraftManager trims existing clip (16.4ms)
+  ✔ DraftManager adds transition to clip (27.2ms)
+  ✔ DraftManager adds keyframe to clip (16.5ms)
+  ✔ DraftManager adds sticker to project (25.0ms)
+  ✔ DraftManager renders fast proxy preview via ffmpeg (409.5ms)
+  ✔ DraftManager adds text overlays to a project (19.8ms)
+  ✔ DraftManager adds synchronized subtitles from SRT (22.8ms)
+  ✔ DraftManager splits an existing clip accurately (25.2ms)
+  ✔ DraftManager sets clip speed and preserves pitch (26.8ms)
+  ✔ DraftManager adds audio fade-in and fade-out (25.1ms)
+  ✔ DraftManager adds viral caption with Aeovisuals styling (23.4ms)
+  ✔ DraftManager creates video bridge draft (203.1ms)
+  ✔ DraftManager adds transient sound effect (96.8ms)
+  ✔ DraftManager duplicates a project (22.3ms)
+  ✔ DraftManager deletes a project safely (13.1ms)
+✔ CapCut MCP Server - Comprehensive Suite (2805ms)
+ℹ tests 21 | pass 21 | fail 0
+```
+
+---
+
+## 🤝 Contributing
+
+Contributions are warmly welcomed! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details on development workflow, code style, and PR submissions.
 
 ---
 
 ## 📄 License
 
-Distributed under the **MIT License**. See `LICENSE` for details.
+Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for details.

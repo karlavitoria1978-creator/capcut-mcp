@@ -1,7 +1,7 @@
 {
   "name": "capcut-mcp-server",
   "version": "1.0.0",
-  "description": "Model Context Protocol (MCP) server for CapCut Desktop video editing automation, multi-track timeline construction, and viral typography styling",
+  "description": "Model Context Protocol (MCP) server & Agent Skills for CapCut Desktop & JianYing Pro video editing automation, multi-track timeline construction, and viral typography styling",
   "main": "dist/src/index.js",
   "type": "module",
   "bin": {
@@ -25,23 +25,35 @@
     "mcp",
     "model-context-protocol",
     "capcut",
+    "capcut-desktop",
     "jianying",
+    "jianying-pro",
     "video-editing",
     "video-automation",
+    "video-generator",
     "ai-agent",
     "claude",
+    "claude-desktop",
     "cursor",
-    "antigravity"
+    "cursor-ai",
+    "antigravity",
+    "windsurf",
+    "cline",
+    "timeline-editor",
+    "video-production",
+    "remotion",
+    "ffmpeg",
+    "typescript"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/capcut-mcp/capcut-mcp.git"
+    "url": "https://github.com/AiPersonacademy/capcut-mcp.git"
   },
   "bugs": {
-    "url": "https://github.com/capcut-mcp/capcut-mcp/issues"
+    "url": "https://github.com/AiPersonacademy/capcut-mcp/issues"
   },
-  "homepage": "https://github.com/capcut-mcp/capcut-mcp#readme",
-  "author": "",
+  "homepage": "https://github.com/AiPersonacademy/capcut-mcp#readme",
+  "author": "AiPersonacademy",
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.6.1",
