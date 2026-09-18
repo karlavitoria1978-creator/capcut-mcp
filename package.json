@@ -1,0 +1,57 @@
+{
+  "name": "capcut-mcp-server",
+  "version": "1.0.0",
+  "description": "Model Context Protocol (MCP) server for CapCut Desktop video editing automation, multi-track timeline construction, and viral typography styling",
+  "main": "dist/src/index.js",
+  "type": "module",
+  "bin": {
+    "capcut-mcp": "dist/src/index.js"
+  },
+  "files": [
+    "dist",
+    "schemas",
+    "skills",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/src/index.js",
+    "test": "node --test dist/tests/*.test.js",
+    "pretest": "npm run build",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "capcut",
+    "jianying",
+    "video-editing",
+    "video-automation",
+    "ai-agent",
+    "claude",
+    "cursor",
+    "antigravity"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/capcut-mcp/capcut-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/capcut-mcp/capcut-mcp/issues"
+  },
+  "homepage": "https://github.com/capcut-mcp/capcut-mcp#readme",
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.6.1",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.9",
+    "typescript": "^5.8.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
