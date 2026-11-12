@@ -29,3 +29,7 @@ Caminhada guiada da areia até dentro do mar em 9 etapas: areia seca, pés na á
 
 - Abra no **Chrome** do celular, com HTTPS, para o giroscópio funcionar.
 - Acrescente `#rapido` ao endereço para a sessão correr 10 vezes mais rápido e concluir sozinha as tarefas de olhar.
+
+## Abrir no celular
+
+`qr-celular.png` é um QR code que abre a página inicial do teste no navegador do celular.
