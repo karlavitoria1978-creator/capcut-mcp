@@ -1,0 +1,1248 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0d7774"><meta name="mobile-web-app-capable" content="yes">
+<style>*,*::before,*::after{box-sizing:border-box}body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
+</head><body>
+<title>Mar Passo a Passo</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Layout: coluna única de prontuário — prévia do mar, protocolo em 6 níveis com profundidade real, entrada, último registro. */
+:root{
+  --bg:#eef3f4; --surface:#ffffff; --fg:#0f2730; --muted:#4d6670; --line:#cfdde1;
+  --accent:#0b6f86; --accent-fg:#ffffff; --soft:#dcebef; --warm:#b4612a;
+  --ok:#2f7d4f; --mid:#a8741a; --high:#b23b2e;
+  --font-display:"Sora","Segoe UI",system-ui,sans-serif;
+  --font-body:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#08171c; --surface:#0f242b; --fg:#e1edf0; --muted:#8fa9b1; --line:#1f3d46;
+    --accent:#4fbcd4; --accent-fg:#04212a; --soft:#14323b; --warm:#e79c66;
+    --ok:#6cc98f; --mid:#e2b45a; --high:#ef7f72; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#08171c; --surface:#0f242b; --fg:#e1edf0; --muted:#8fa9b1; --line:#1f3d46;
+  --accent:#4fbcd4; --accent-fg:#04212a; --soft:#14323b; --warm:#e79c66;
+  --ok:#6cc98f; --mid:#e2b45a; --high:#ef7f72; color-scheme:dark;
+}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:16px;line-height:1.55}
+.home{max-width:660px;margin:0 auto;padding-block:20px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:30px}
+.hero{display:flex;flex-direction:column;gap:14px}
+.hero canvas{display:block;width:100%;max-width:100%;aspect-ratio:16/9;border-radius:14px;background:#9cc7dc}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+h1{font-family:var(--font-display);font-weight:600;font-size:clamp(28px,7vw,40px);line-height:1.1;margin:0;text-wrap:balance}
+h2{font-family:var(--font-display);font-weight:600;font-size:19px;margin:0;text-wrap:balance}
+p{margin:0;max-width:65ch}
+.lead{color:var(--muted)}
+.actions{display:flex;flex-wrap:wrap;gap:12px}
+button{font:inherit;cursor:pointer}
+.btn{flex:1 1 200px;min-height:56px;border-radius:12px;font-weight:600;font-size:17px;border:2px solid var(--accent);padding:10px 18px}
+.btn-primary{background:var(--accent);color:var(--accent-fg)}
+.btn-secondary{background:transparent;color:var(--accent)}
+.btn:focus-visible,.chk input:focus-visible,.exit:focus-visible{outline:3px solid var(--warm);outline-offset:2px}
+.chk{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:15px}
+.chk input{width:20px;height:20px;accent-color:var(--accent)}
+section{display:flex;flex-direction:column;gap:12px}
+/* Protocolo: cada nível com a profundidade da água desenhada em escala (0 a 1,4 m) */
+.ladder{list-style:none;margin:0;padding:0;border:1px solid var(--line);border-radius:14px;background:var(--surface);overflow:hidden}
+.ladder li{display:grid;grid-template-columns:30px 1fr 64px;gap:12px;align-items:center;padding:12px 14px;border-top:1px solid var(--line)}
+.ladder li:first-child{border-top:0}
+.ladder .num{font-family:var(--font-display);font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums}
+.ladder .txt{min-width:0}
+.ladder .name{font-weight:600}
+.ladder .det{color:var(--muted);font-size:14px}
+.ladder .depth{height:34px;border-radius:6px;background:var(--soft);position:relative;overflow:hidden}
+.ladder .depth i{position:absolute;left:0;right:0;bottom:0;background:var(--accent);opacity:.55}
+.ladder .depth b{position:absolute;inset:0;display:grid;place-items:center;font-size:11px;font-weight:600;color:var(--fg);font-variant-numeric:tabular-nums}
+.challenge{display:flex;flex-direction:column;gap:8px;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:12px;padding:14px 16px}
+.note{font-size:14px;color:var(--muted);border-left:3px solid var(--line);padding-left:12px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.cols > div{min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;font-size:15px;display:flex;flex-direction:column;gap:6px}
+.cols h3{margin:0;font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.result{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:16px}
+.reach{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px}
+.reach .big{font-family:var(--font-display);font-size:28px;font-weight:600;line-height:1.1}
+.reach .sub{color:var(--muted);font-size:14px}
+.trail{display:flex;flex-direction:column;gap:6px}
+.trail .row{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:center;font-size:15px}
+.trail .row .lv{font-family:var(--font-display);font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums}
+.chips{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.chip{min-width:28px;text-align:center;padding:1px 7px;border-radius:999px;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;border:1.5px solid currentColor}
+.chip.ok{color:var(--ok)} .chip.mid{color:var(--mid)} .chip.high{color:var(--high)}
+.slack{display:grid;grid-template-columns:40px 1fr;gap:10px;font-size:15px;border-top:1px solid var(--line);padding-top:14px}
+.slack .av{width:40px;height:40px;border-radius:8px;background:var(--accent);color:var(--accent-fg);display:grid;place-items:center;font-weight:700;font-size:13px}
+.slack .who{font-weight:700}
+.slack .who small{font-weight:400;color:var(--muted);margin-left:6px}
+.slack .msg{min-width:0}
+.tag{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.empty{color:var(--muted);font-size:15px}
+.status{font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:4px 12px;border-radius:999px;border:1.5px solid currentColor}
+.status.concluido{color:var(--ok)} .status.parcial{color:var(--mid)} .status.nao{color:var(--muted)}
+
+#vr{position:fixed;inset:0;background:#000;z-index:50;touch-action:none}
+#vr canvas{display:block;width:100%;height:100%}
+#vr .exit{position:absolute;top:calc(env(safe-area-inset-top,0px) + 12px);left:max(12px,env(safe-area-inset-left,0px));background:rgba(6,24,30,.72);color:#e1edf0;border:1px solid rgba(255,255,255,.3);border-radius:10px;padding:10px 16px;font-weight:600}
+#vr .hint{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 18px);background:rgba(6,24,30,.72);color:#e1edf0;padding:8px 14px;border-radius:999px;font-size:14px;white-space:nowrap;pointer-events:none}
+#vr .divider{position:absolute;top:0;bottom:0;left:50%;width:2px;margin-left:-1px;background:#000;pointer-events:none}
+#vr .rotate{position:absolute;inset:0;display:grid;place-items:center;background:#06181e;color:#e1edf0;text-align:center;padding:24px;font-size:20px;font-family:var(--font-display)}
+</style>
+
+<main class="home" id="home">
+  <div class="hero">
+    <canvas id="preview" width="960" height="540" aria-label="Prévia: mar calmo visto da beira da praia"></canvas>
+    <span class="eyebrow">Teste · Exposição gradual à água · 10 a 15 minutos</span>
+    <h1>Mar Passo a Passo</h1>
+    <p class="lead">Uma caminhada guiada para dentro do mar. A pessoa olha firme para um círculo para dar os próximos passos, sente a água subir dos pés ao pescoço, enfrenta um desafio de 1 ou 2 minutos debaixo d’água e termina boiando, olhando o céu. Em cada etapa marca o medo de 0 a 10 e escolhe se segue, fica ou volta.</p>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-primary" id="goStereo" type="button">Modo óculos</button>
+    <button class="btn btn-secondary" id="goMono" type="button">Ver no celular</button>
+  </div>
+  <div class="actions" style="gap:18px"><label class="chk"><input type="checkbox" id="narr" checked> Narração por voz</label><label class="chk"><input type="checkbox" id="music" checked> Música de fundo</label></div>
+
+  <section>
+    <h2>Protocolo da sessão</h2>
+    <ol class="ladder" aria-label="Etapas da caminhada para dentro do mar"><li><span class="num">1</span><span class="txt"><span class="name">Areia seca</span><br><span class="det">Observa o mar a 18 m, ao lado do guarda-sol</span></span><span class="depth"><b>0 m</b></span></li><li><span class="num">2</span><span class="txt"><span class="name">Pés na água</span><br><span class="det">As ondas batem nos pés e voltam</span></span><span class="depth"><i style="height:4%"></i><b>5 cm</b></span></li><li><span class="num">3</span><span class="txt"><span class="name">Água nos joelhos</span><br><span class="det">Pés firmes, praia logo atrás</span></span><span class="depth"><i style="height:33%"></i><b>50 cm</b></span></li><li><span class="num">4</span><span class="txt"><span class="name">Água nas coxas</span><br><span class="det">As ondas passam pelas pernas</span></span><span class="depth"><i style="height:47%"></i><b>70 cm</b></span></li><li><span class="num">5</span><span class="txt"><span class="name">Água na cintura</span><br><span class="det">Peixes nadando ao redor</span></span><span class="depth"><i style="height:61%"></i><b>90 cm</b></span></li><li><span class="num">6</span><span class="txt"><span class="name">Água no peito</span><br><span class="det">As ondas sobem e seguem para a praia</span></span><span class="depth"><i style="height:80%"></i><b>1,2 m</b></span></li><li><span class="num">7</span><span class="txt"><span class="name">Água no pescoço</span><br><span class="det">Mar calmo, rosto fora da água</span></span><span class="depth"><i style="height:93%"></i><b>1,4 m</b></span></li><li><span class="num">8</span><span class="txt"><span class="name">Desafio debaixo d’água</span><br><span class="det">1 ou 2 minutos no fundo, respirando no ritmo guiado</span></span><span class="depth"><i style="height:100%"></i><b>rosto</b></span></li><li><span class="num">9</span><span class="txt"><span class="name">Boiar</span><br><span class="det">Deitar no mar e olhar o céu</span></span><span class="depth"><i style="height:100%"></i><b>boiando</b></span></li></ol>
+    <div class="challenge">
+      <span class="eyebrow">Desafio da sessão</span>
+      <p><strong>Caminhar até a água chegar ao pescoço e ficar 1 ou 2 minutos debaixo d’água, mantendo a respiração no ritmo guiado.</strong></p>
+      <p class="lead">No óculos a pessoa respira normalmente; o desafio é controlar a ansiedade de estar submersa. Conta como <strong>concluído</strong> quando ela fica o tempo escolhido sem pedir para subir. Subir antes registra <strong>em parte</strong>, com o tempo alcançado. No fim, ela mesma responde se conseguiu manter a respiração calma.</p>
+    </div>
+    <div class="cols">
+      <div><h3>Regras da exposição</h3><span>Ninguém anda sem escolher: para seguir, a pessoa olha firme para o círculo. Com medo 7 ou mais, a sessão propõe ficar e respirar antes de seguir. Voltar um passo é sempre uma opção.</span></div>
+      <div><h3>Recurso de regulação</h3><span>Durante a respiração guiada, as ondas diminuem de tamanho. A pessoa vê o mar se acalmar junto com ela.</span></div>
+    </div>
+    <p class="note">Uso no consultório, com a terapeuta presente. Interrompa se houver tontura, enjoo ou mal-estar. Não indicado para pessoas com epilepsia fotossensível.</p>
+  </section>
+
+  <section>
+    <h2>Último registro</h2>
+    <div class="result" id="result"></div>
+  </section>
+</main>
+
+<div id="vr" hidden>
+  <canvas id="gl"></canvas>
+  <div class="divider" id="divider" hidden></div>
+  <button class="exit" id="exitBtn" type="button">Sair</button>
+  <div class="hint" id="hint" hidden>Arraste para olhar ao redor</div>
+  <div class="rotate" id="rotate" hidden>Gire o celular na horizontal</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+"use strict";
+var $=function(s){ return document.querySelector(s); };
+var store={
+  get:function(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } },
+  set:function(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+};
+var FAST=function(){ return location.hash==='#rapido' ? 10 : 1; };
+
+var LEVELS=[
+  {name:'Areia seca',       short:'areia seca',       z:18},
+  {name:'Pés na água',      short:'pés na água',      z:0.6},
+  {name:'Água nos joelhos', short:'água nos joelhos', z:-12},
+  {name:'Água nas coxas',   short:'água nas coxas',   z:-17},
+  {name:'Água na cintura',  short:'água na cintura',  z:-23},
+  {name:'Água no peito',    short:'água no peito',    z:-30},
+  {name:'Água no pescoço',  short:'água no pescoço',  z:-35, calm:true},
+  {name:'Desafio debaixo d’água', short:'desafio debaixo d’água',         z:-35, calm:true, dive:true},
+  {name:'Boiar',            short:'boiar no mar',     z:-35, calm:true, float:true}
+];
+
+/* ---------- Registro ---------- */
+function band(n){ return n<=3?'ok':n<=6?'mid':'high'; }
+function renderResult(){
+  var r=store.get('mar-passo:last'), box=$('#result');
+  if(!r){ box.innerHTML='<p class="empty">Depois da primeira sessão aparecem aqui o nível alcançado, as notas de medo de cada nível e o aviso que a Carla receberia no Slack.</p>'; return; }
+  var SELF={sim:'Sim',parte:'Em parte',nao:'Não',alem:'Fui além do que esperava',ate:'Fui até onde dava',dificil:'Foi difícil hoje'};
+  var by={}, order=[];
+  r.log.forEach(function(e){ if(!by[e.level]){ by[e.level]=[]; order.push(e.level); } by[e.level].push(e.r); });
+  var rows=order.map(function(lv){
+    return '<div class="row"><span class="lv">'+(lv+1)+'</span><span>'+LEVELS[lv].name+'</span><span class="chips">'+
+      by[lv].map(function(n){ return '<span class="chip '+band(n)+'">'+n+'</span>'; }).join('')+'</span></div>';
+  }).join('');
+  var top=r.max, topR=by[top]||[], first=topR[0], last=topR[topR.length-1];
+  var mins=Math.max(1,Math.round(r.secs/60));
+  var resumo;
+  if(top>=4) resumo='Entrou na água até '+LEVELS[top].short+'. ';
+  else if(top>=1) resumo='Aproximou-se até '+LEVELS[top].short+'. ';
+  else resumo='Ficou na areia seca, observando o mar. ';
+  if(first!=null && last!=null && last<first) resumo+='No nível mais alto, o medo caiu de '+first+' para '+last+' ao permanecer. Sugestão: começar a próxima sessão neste mesmo nível.';
+  else if(first!=null && last!=null && last>first) resumo+='O medo subiu de '+first+' para '+last+' no nível mais alto. Sugestão: retomar um nível abaixo na próxima sessão.';
+  else resumo+='O medo ficou estável no nível mais alto. Sugestão: repetir o nível com mais tempo de permanência.';
+  var when=new Date(r.at), hh=String(when.getHours()).padStart(2,'0')+':'+String(when.getMinutes()).padStart(2,'0');
+  var ch=r.challenge, st=r.status||'nao';
+  var stLabel=st==='concluido'?'Desafio concluído':st==='parcial'?'Desafio em parte':'Desafio não iniciado';
+  var chTxt=ch&&ch.target?('Debaixo d’água: '+Math.floor(ch.secs/60)+':'+String(ch.secs%60).padStart(2,'0')+' de '+(ch.target/60)+':00'):'Não chegou ao desafio debaixo d’água';
+  var selfTxt=ch&&ch.self?'Respiração calma lá embaixo: '+SELF[ch.self]:(r.selfEval?'Autoavaliação: '+SELF[r.selfEval]:'');
+  if(st==='concluido') resumo='Concluiu o desafio: caminhou até o pescoço e ficou '+(ch.target/60)+' min debaixo d’água. '+resumo;
+  box.innerHTML=
+    '<div class="reach"><span class="status '+st+'">'+stLabel+'</span><span class="sub">'+chTxt+'</span></div>'+
+    '<div class="reach"><span class="big">Etapa '+(top+1)+' · '+LEVELS[top].name+'</span><span class="sub">'+mins+' min de sessão · '+r.log.length+' avaliações'+(selfTxt?' · '+selfTxt:'')+'</span></div>'+
+    '<div class="trail" aria-label="Notas de medo por nível, na ordem em que foram marcadas">'+rows+'</div>'+
+    '<div class="slack"><div class="av" aria-hidden="true">VR</div><div class="msg">'+
+    '<div class="tag">Exemplo do aviso no Slack</div>'+
+    '<div class="who">Consultório VR <small>'+hh+'</small></div>'+
+    '<div>Paciente <strong>P-TESTE</strong> fez “Mar Passo a Passo”. <strong>'+stLabel+'</strong>. Chegou à etapa '+(top+1)+' ('+LEVELS[top].short+')'+(first!=null?', medo '+first+' → '+last:'')+'. '+chTxt+'.</div>'+
+    '<div style="color:var(--muted);margin-top:4px">Resumo: '+resumo+'</div>'+
+    '</div></div>';
+}
+renderResult();
+
+if(!window.THREE){ $('#goStereo').disabled=true; $('#goMono').disabled=true; return; }
+
+/* ---------- Geografia da praia ---------- */
+function sandH(z){ if(z<0) return 0.04*z; if(z<40) return 0.03*z; return 1.2+(z-40)*0.12; }
+function tide(t){ return 0.035*Math.sin(0.55*t); }
+function shoreF(z){ return Math.max(0,Math.min(1,-z/7)); }
+/* Ondas de Gerstner: [direção x, direção z, amplitude, comprimento] — todas andando em direção à praia */
+var WAVES=[[0,1,0.13,20],[0.3,0.95,0.06,11],[-0.35,0.94,0.035,6.5],[0.7,0.71,0.015,3.3]];
+function waveH(x,z,t,amp){
+  var s=amp*shoreF(z), h=0;
+  for(var i=0;i<WAVES.length;i++){ var w=WAVES[i], k=6.28318/w[3], om=Math.sqrt(9.8*k), dl=Math.hypot(w[0],w[1]); h+=w[2]*Math.sin(k*(w[0]*x+w[1]*z)/dl-om*t); }
+  return tide(t)+s*h;
+}
+var EYE=1.6;
+
+var canvas=$('#gl');
+var renderer=new THREE.WebGLRenderer({canvas:canvas, antialias:false});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.25));
+renderer.setClearColor(0xbcd4e6);
+var scene=new THREE.Scene();
+var head=new THREE.Object3D(); scene.add(head);
+var monoCam=new THREE.PerspectiveCamera(70,1,0.05,1200); head.add(monoCam);
+var IPD=0.064;
+var camL=new THREE.PerspectiveCamera(90,1,0.05,1200); camL.position.x=-IPD/2; head.add(camL);
+var camR=new THREE.PerspectiveCamera(90,1,0.05,1200); camR.position.x= IPD/2; head.add(camR);
+
+var SUN=new THREE.Vector3(0.34,0.66,-0.67).normalize();
+
+/* Céu físico (modelo de Preetham, o mesmo do Sky.js do three.js, MIT) com nuvens, gravado uma vez num cubo */
+var skyBake=new THREE.ShaderMaterial({
+  side:THREE.BackSide, depthWrite:false,
+  uniforms:{ sunPosition:{value:SUN.clone().multiplyScalar(450000)}, rayleigh:{value:1.15}, turbidity:{value:2.4}, mieCoefficient:{value:0.003}, mieDirectionalG:{value:0.8}, up:{value:new THREE.Vector3(0,1,0)} },
+  vertexShader:[
+    'uniform vec3 sunPosition; uniform float rayleigh; uniform float turbidity; uniform float mieCoefficient; uniform vec3 up;',
+    'varying vec3 vWorldPosition; varying vec3 vSunDirection; varying float vSunfade; varying vec3 vBetaR; varying vec3 vBetaM; varying float vSunE;',
+    'const float e=2.718281828459045; const float pi=3.141592653589793;',
+    'const vec3 totalRayleigh=vec3(5.804542996261093E-6,1.3562911419845635E-5,3.0265902468824876E-5);',
+    'const vec3 MieConst=vec3(1.8399918514433978E14,2.7798023919660528E14,4.0790479543861094E14);',
+    'const float cutoffAngle=1.6110731556870734; const float steepness=1.5; const float EE=1000.0;',
+    'float sunIntensity(float c){ c=clamp(c,-1.0,1.0); return EE*max(0.0,1.0-pow(e,-((cutoffAngle-acos(c))/steepness))); }',
+    'vec3 totalMie(float T){ float c=(0.2*T)*10E-18; return 0.434*c*MieConst; }',
+    'void main(){ vec4 wp=modelMatrix*vec4(position,1.0); vWorldPosition=wp.xyz;',
+    ' gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); gl_Position.z=gl_Position.w;',
+    ' vSunDirection=normalize(sunPosition); vSunE=sunIntensity(dot(vSunDirection,up));',
+    ' vSunfade=1.0-clamp(1.0-exp((sunPosition.y/450000.0)),0.0,1.0);',
+    ' float rc=rayleigh-(1.0*(1.0-vSunfade)); vBetaR=totalRayleigh*rc; vBetaM=totalMie(turbidity)*mieCoefficient; }'
+  ].join('\n'),
+  fragmentShader:[
+    'precision highp float;',
+    'varying vec3 vWorldPosition; varying vec3 vSunDirection; varying float vSunfade; varying vec3 vBetaR; varying vec3 vBetaM; varying float vSunE;',
+    'uniform float mieDirectionalG; uniform vec3 up;',
+    'const float pi=3.141592653589793; const float rayleighZenithLength=8.4E3; const float mieZenithLength=1.25E3;',
+    'const float THREE_OVER_SIXTEENPI=0.05968310365946075; const float ONE_OVER_FOURPI=0.07957747154594767;',
+    'float rayleighPhase(float c){ return THREE_OVER_SIXTEENPI*(1.0+pow(c,2.0)); }',
+    'float hgPhase(float c,float g){ float g2=pow(g,2.0); float inv=1.0/pow(1.0-2.0*g*c+g2,1.5); return ONE_OVER_FOURPI*((1.0-g2)*inv); }',
+    'float hash(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }',
+    'float vnoise(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f); return mix(mix(hash(i),hash(i+vec2(1.0,0.0)),f.x),mix(hash(i+vec2(0.0,1.0)),hash(i+vec2(1.0,1.0)),f.x),f.y); }',
+    'float fbm(vec2 p){ float a=0.5, s=0.0; for(int i=0;i<5;i++){ s+=a*vnoise(p); p=p*2.03+vec2(1.7,9.2); a*=0.5; } return s; }',
+    'vec3 aces(vec3 x){ return clamp((x*(2.51*x+0.03))/(x*(2.43*x+0.59)+0.14),0.0,1.0); }',
+    'vec3 preetham(vec3 direction){',
+    ' float zenithAngle=acos(max(0.0,dot(up,direction)));',
+    ' float inverse=1.0/(cos(zenithAngle)+0.15*pow(93.885-((zenithAngle*180.0)/pi),-1.253));',
+    ' float sR=rayleighZenithLength*inverse; float sM=mieZenithLength*inverse;',
+    ' vec3 Fex=exp(-(vBetaR*sR+vBetaM*sM)); float cosTheta=dot(direction,vSunDirection);',
+    ' vec3 betaRTheta=vBetaR*rayleighPhase(cosTheta*0.5+0.5); vec3 betaMTheta=vBetaM*hgPhase(cosTheta,mieDirectionalG);',
+    ' vec3 Lin=pow(vSunE*((betaRTheta+betaMTheta)/(vBetaR+vBetaM))*(1.0-Fex),vec3(1.5));',
+    ' Lin*=mix(vec3(1.0),pow(vSunE*((betaRTheta+betaMTheta)/(vBetaR+vBetaM))*Fex,vec3(0.5)),clamp(pow(1.0-dot(up,vSunDirection),5.0),0.0,1.0));',
+    ' vec3 L0=vec3(0.1)*Fex; vec3 tex=(Lin+L0)*0.04+vec3(0.0,0.0003,0.00075);',
+    ' return pow(tex,vec3(1.0/(1.2+(1.2*vSunfade)))); }',
+    'void main(){',
+    ' vec3 d=normalize(vWorldPosition);',
+    ' vec3 dd=d; dd.y=max(d.y,0.004); dd=normalize(dd);',
+    ' vec3 col=preetham(dd);',
+    ' if(d.y>0.0){',
+    '   vec2 cp=d.xz/(d.y+0.07)*0.75;',
+    '   float c=fbm(cp+vec2(3.1,1.7)); float cov=smoothstep(0.5,0.76,c)*smoothstep(0.0,0.2,d.y);',
+    '   float lit=pow(max(dot(d,vSunDirection),0.0),3.0); float shade=fbm(cp*1.9+vec2(5.0,2.0));',
+    '   vec3 cc=mix(vec3(0.62,0.66,0.72),vec3(1.0,0.98,0.95),0.45+0.55*shade)*(0.95+0.5*lit);',
+    '   col=mix(col,cc,cov*0.92);',
+    ' }',
+    ' if(d.y<0.0) col=mix(col,col*vec3(0.62,0.7,0.74),smoothstep(0.0,-0.3,d.y));',
+    ' gl_FragColor=vec4(aces(col*0.78),1.0); }'
+  ].join('\n')
+});
+var skyScene=new THREE.Scene(); skyScene.add(new THREE.Mesh(new THREE.BoxGeometry(1,1,1),skyBake));
+var envRT=new THREE.WebGLCubeRenderTarget(512,{generateMipmaps:true, minFilter:THREE.LinearMipmapLinearFilter});
+var cubeCam=new THREE.CubeCamera(0.1,10,envRT); skyScene.add(cubeCam); cubeCam.update(renderer,skyScene);
+var ENV=envRT.texture;
+
+/* Textura real de ondulação da água (three.js, MIT); se não carregar, usa ruído gerado */
+function fallbackNormals(){
+  var N=256, c=document.createElement('canvas'); c.width=c.height=N; var g=c.getContext('2d'), img=g.createImageData(N,N);
+  for(var y=0;y<N;y++) for(var x=0;x<N;x++){ var i=(y*N+x)*4, a=Math.sin(x*0.15+Math.sin(y*0.11)*2.0), b=Math.cos(y*0.13+Math.cos(x*0.09)*2.0);
+    img.data[i]=128+a*50; img.data[i+1]=128+b*50; img.data[i+2]=255; img.data[i+3]=255; }
+  g.putImageData(img,0,0); var t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; return t;
+}
+var NMAP=fallbackNormals();
+var U={ t:{value:0}, amp:{value:1}, sun:{value:SUN}, cam:{value:new THREE.Vector3()}, under:{value:0}, env:{value:ENV}, nmap:{value:NMAP} };
+new THREE.TextureLoader().load('assets/waternormals.jpg',function(tx){ tx.wrapS=tx.wrapT=THREE.RepeatWrapping; tx.anisotropy=4; U.nmap.value=tx; if(typeof drawPreview==='function') drawPreview(); },undefined,function(){});
+
+var GLSL_BASE=[
+  'uniform float t; uniform float amp; uniform vec3 sun; uniform vec3 cam; uniform float under; uniform samplerCube env; uniform sampler2D nmap;',
+  'const vec3 DEEPW=vec3(0.04,0.27,0.32);',
+  'float sandH(float z){ return z<0.0 ? 0.04*z : (z<40.0 ? 0.03*z : 1.2+(z-40.0)*0.12); }',
+  'float tide(){ return 0.035*sin(0.55*t); }',
+  'float shoreF(float z){ return clamp(-z/7.0,0.0,1.0); }',
+  'float hash(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }',
+  'float vnoise(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f); return mix(mix(hash(i),hash(i+vec2(1.0,0.0)),f.x),mix(hash(i+vec2(0.0,1.0)),hash(i+vec2(1.0,1.0)),f.x),f.y); }'
+].join('\n');
+var GLSL_COMMON=GLSL_BASE+'\n'+[
+  'vec3 horizonFog(vec3 col, vec3 w, float a, float b){',
+  ' vec3 V=cam-w; float d=length(V);',
+  ' if(under>0.5) return mix(col,DEEPW,smoothstep(0.3,13.0,d));',
+  ' vec3 hd=normalize(vec3(-V.x,0.035*d,-V.z)); return mix(col,textureCube(env,hd).rgb,smoothstep(a,b,d)); }'
+].join('\n');
+
+/* Céu visível: lê o cubo e acrescenta o disco do sol */
+var skyMat=new THREE.ShaderMaterial({
+  uniforms:U, side:THREE.BackSide, depthWrite:false,
+  vertexShader:'varying vec3 vDir; void main(){ vDir=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }',
+  fragmentShader:['precision highp float;',GLSL_COMMON,'varying vec3 vDir;',
+    'void main(){ vec3 d=normalize(vDir); vec3 c=textureCube(env,d).rgb; float s=max(dot(d,sun),0.0);',
+    ' c+=vec3(1.0,0.97,0.9)*(smoothstep(0.99988,0.99994,s)*1.4+pow(s,350.0)*0.55+pow(s,30.0)*0.07);',
+    ' if(under>0.5) c=mix(DEEPW,vec3(0.4,0.75,0.8),smoothstep(0.0,0.9,d.y));',
+    ' gl_FragColor=vec4(min(c,vec3(1.0)),1.0); }'].join('\n')
+});
+var sky=new THREE.Mesh(new THREE.SphereGeometry(600,40,24), skyMat); sky.renderOrder=-1; scene.add(sky);
+
+/* Areia: grão, ondulações do vento, areia molhada que reflete o céu, restinga nas dunas e cáusticas debaixo d'água */
+var sandGeo=new THREE.PlaneGeometry(300,300,6,200); sandGeo.rotateX(-Math.PI/2); sandGeo.translate(0,0,-40);
+(function(){ var p=sandGeo.attributes.position; for(var i=0;i<p.count;i++) p.setY(i,sandH(p.getZ(i))); })();
+var sandMat=new THREE.ShaderMaterial({
+  uniforms:U,
+  vertexShader:'varying vec3 vW; void main(){ vec4 w=modelMatrix*vec4(position,1.0); vW=w.xyz; gl_Position=projectionMatrix*viewMatrix*w; }',
+  fragmentShader:['precision highp float;',GLSL_COMMON,'varying vec3 vW;',
+    'void main(){',
+    ' vec3 Vv=cam-vW; float dist=length(Vv); vec3 V=Vv/dist;',
+    ' float near=1.0-smoothstep(5.0,45.0,dist);',
+    ' float dh=vW.z<0.0?0.04:(vW.z<40.0?0.03:0.12); vec3 n=normalize(vec3(0.0,1.0,-dh));',
+    ' float rip=sin(vW.z*6.5+sin(vW.x*0.8)*2.6+vnoise(vW.xz*0.7)*3.0);',
+    ' vec3 g=texture2D(nmap,vW.xz*0.9).rgb*2.0-1.0;',
+    ' n=normalize(n+vec3(g.x*0.16,0.0,g.y*0.16+rip*0.035)*near);',
+    ' float mott=vnoise(vW.xz*0.3)*0.55+vnoise(vW.xz*1.9)*0.45;',
+    ' vec3 alb=mix(vec3(0.74,0.65,0.50),vec3(0.88,0.80,0.65),mott);',
+    ' alb*=0.9+0.16*hash(floor(vW.xz*110.0))*near;',
+    ' alb*=1.0-step(0.988,hash(floor(vW.xz*60.0)))*0.4*near;',
+    ' float wl=tide();',
+    ' float wet=1.0-smoothstep(0.03,0.09,vW.y);',
+    ' alb=mix(alb,alb*vec3(0.6,0.58,0.55),wet);',
+    ' float veg=smoothstep(41.0,45.0,vW.z)*smoothstep(0.38,0.62,vnoise(vW.xz*0.22)+0.18*vnoise(vW.xz*1.7));',
+    ' alb=mix(alb,vec3(0.26,0.33,0.18)*(0.75+0.5*vnoise(vW.xz*2.5)),veg);',
+    ' float ndl=max(dot(n,sun),0.0);',
+    ' vec3 amb=textureCube(env,vec3(0.0,1.0,0.0)).rgb;',
+    ' vec3 col=alb*(vec3(1.0,0.95,0.86)*ndl*0.95+amb*0.42);',
+    ' vec3 nw=normalize(mix(n,vec3(0.0,1.0,0.0),0.75)); vec3 R=reflect(-V,nw);',
+    ' float F=0.03+0.97*pow(1.0-max(dot(nw,V),0.0),5.0);',
+    ' col=mix(col,textureCube(env,R).rgb,wet*F*0.85); col+=wet*vec3(1.0,0.96,0.88)*pow(max(dot(R,sun),0.0),180.0)*0.9;',
+    ' float depth=wl-vW.y;',
+    ' float edge=smoothstep(0.0,0.012,-depth)*(1.0-smoothstep(0.012,0.05,-depth));',
+    ' float lace=smoothstep(0.55,0.8,texture2D(nmap,vW.xz*0.45+vec2(0.0,t*0.02)).r);',
+    ' col=mix(col,vec3(0.92,0.93,0.92),edge*lace*0.8);',
+    ' if(depth>0.0){',
+    '   vec3 ab=exp(-depth*vec3(0.6,0.13,0.09));',
+    '   float c1=texture2D(nmap,vW.xz*0.22+vec2(t*0.03,t*0.02)).r, c2=texture2D(nmap,vW.xz*0.31-vec2(t*0.025,-t*0.018)).r;',
+    '   float caus=pow(clamp(1.0-abs(c1-c2)*2.2,0.0,1.0),6.0);',
+    '   col=col*ab+vec3(0.9,1.0,0.95)*caus*0.35*ab.g*smoothstep(0.0,0.25,depth);',
+    '   col=mix(col,vec3(0.05,0.32,0.36),1.0-exp(-depth*0.14));',
+    ' }',
+    ' gl_FragColor=vec4(horizonFog(col,vW,45.0,200.0),1.0); }'].join('\n')
+});
+scene.add(new THREE.Mesh(sandGeo,sandMat));
+
+/* Mar: ondas de Gerstner, textura real de ondulação, reflexo do céu, absorção da luz pela profundidade, espuma */
+var waterGeo=new THREE.PlaneGeometry(320,320,140,140); waterGeo.rotateX(-Math.PI/2); waterGeo.translate(0,0,-140);
+var GERSTNER=WAVES.map(function(w,i){
+  var dl=Math.hypot(w[0],w[1]);
+  return ' g(p,vec2('+(w[0]/dl).toFixed(4)+','+(w[1]/dl).toFixed(4)+'),'+w[2].toFixed(4)+'*s,'+w[3].toFixed(2)+',P,N);';
+}).join('\n');
+var waterMat=new THREE.ShaderMaterial({
+  uniforms:U, transparent:true, depthWrite:false, side:THREE.DoubleSide,
+  vertexShader:[GLSL_BASE,'varying vec3 vW; varying vec3 vN; varying float vH;',
+    'void g(vec2 p,vec2 d,float A,float L,inout vec3 P,inout vec3 N){',
+    ' float k=6.28318/L, w=sqrt(9.8*k), th=k*dot(d,p)-w*t, c=cos(th), sn=sin(th), Q=0.9;',
+    ' P.x+=Q*A*d.x*c; P.z+=Q*A*d.y*c; P.y+=A*sn; N.x-=d.x*k*A*c; N.z-=d.y*k*A*c; N.y-=Q*k*A*sn; }',
+    'void main(){ vec4 w=modelMatrix*vec4(position,1.0); vec2 p=w.xz; float s=amp*shoreF(p.y);',
+    ' vec3 P=vec3(0.0); vec3 N=vec3(0.0,1.0,0.0);',
+    GERSTNER,
+    ' vW=vec3(p.x+P.x,tide()+P.y,p.y+P.z); vN=N; vH=P.y; gl_Position=projectionMatrix*viewMatrix*vec4(vW,1.0); }'].join('\n'),
+  fragmentShader:['precision highp float;',GLSL_COMMON,'varying vec3 vW; varying vec3 vN; varying float vH;',
+    'void main(){',
+    ' vec3 Vv=cam-vW; float dist=length(Vv); vec3 V=Vv/dist;',
+    ' vec3 n1=texture2D(nmap,vW.xz*0.07+vec2(t*0.011,t*0.019)).rgb*2.0-1.0;',
+    ' vec3 n2=texture2D(nmap,vW.xz*0.19+vec2(-t*0.016,t*0.012)).rgb*2.0-1.0;',
+    ' vec3 n3=texture2D(nmap,vW.xz*0.5+vec2(t*0.03,-t*0.02)).rgb*2.0-1.0;',
+    ' float fd=1.0-smoothstep(25.0,140.0,dist);',
+    ' vec3 dn=(n1+n2*0.8+n3*0.45*(1.0-smoothstep(4.0,20.0,dist)));',
+    ' vec3 n=normalize(normalize(vN)+vec3(dn.x,0.0,dn.y)*0.22*fd);',
+    ' if(!gl_FrontFacing){',
+    '   float up=max(dot(-n,V),0.0); vec3 snell=mix(vec3(0.12,0.45,0.5),vec3(0.82,0.95,0.96),smoothstep(0.55,0.95,up));',
+    '   gl_FragColor=vec4(horizonFog(snell,vW,45.0,200.0),0.92); return; }',
+    ' float NdV=max(dot(n,V),0.0);',
+    ' float F=0.02+0.98*pow(1.0-NdV,5.0);',
+    ' vec3 R=reflect(-V,n); R.y=abs(R.y);',
+    ' vec3 refl=textureCube(env,R).rgb;',
+    ' float depth=max(vW.y-sandH(vW.z),0.0);',
+    ' float od=depth/max(NdV,0.2);',
+    ' vec3 body=mix(vec3(0.015,0.11,0.15),vec3(0.06,0.38,0.40),exp(-depth*0.12))*(0.55+0.45*sun.y);',
+    ' float sss=pow(max(dot(V,-sun)*0.5+0.5,0.0),3.0)*clamp(vH*4.0,0.0,1.0);',
+    ' body+=vec3(0.05,0.42,0.38)*sss*0.5;',
+    ' float hide=1.0-exp(-od*0.3);',
+    ' vec3 col=mix(body,refl,F);',
+    ' float a=clamp(F+(1.0-F)*hide,0.0,1.0);',
+    ' float rs=max(dot(R,sun),0.0); float sp=pow(rs,900.0)*7.0+pow(rs,120.0)*0.45;',
+    ' col+=vec3(1.0,0.96,0.88)*sp; a=max(a,min(sp,1.0));',
+    ' float fn=texture2D(nmap,vW.xz*0.33+vec2(0.0,t*0.06)).r;',
+    ' float shore=smoothstep(0.1,0.0,depth);',
+    ' float lace=smoothstep(0.5,0.78,fn+shore*0.55)*smoothstep(0.32,0.0,depth);',
+    ' float crest=smoothstep(0.1,0.17,vH)*smoothstep(0.6,0.8,fn)*0.5;',
+    ' float foam=clamp(shore*0.75+lace*0.85+crest,0.0,1.0);',
+    ' col=mix(col,vec3(0.93,0.95,0.94)*(0.75+0.25*sun.y),foam); a=max(a,foam*0.95);',
+    ' float fog=smoothstep(45.0,200.0,dist); col=horizonFog(col,vW,45.0,200.0); a=mix(a,1.0,fog);',
+    ' gl_FragColor=vec4(min(col,vec3(1.0)),a); }'].join('\n')
+});
+var water=new THREE.Mesh(waterGeo,waterMat); water.renderOrder=2; water.frustumCulled=false; scene.add(water);
+
+/* Morro distante à esquerda, com perspectiva atmosférica */
+(function(){
+  function n1(x){ return Math.sin(x*0.013)*0.5+Math.sin(x*0.031+1.3)*0.3+Math.sin(x*0.077+2.1)*0.2; }
+  var geo=new THREE.PlaneGeometry(420,260,90,50); geo.rotateX(-Math.PI/2); geo.translate(-260,0,-220);
+  var p=geo.attributes.position;
+  for(var i=0;i<p.count;i++){
+    var x=p.getX(i), z=p.getZ(i), dx=(-x-120)/140, mask=Math.max(0,Math.min(1,dx));
+    var h=mask*mask*(48+22*n1(z*1.7+x))*(0.6+0.4*Math.sin(z*0.02+0.5)) + 3*Math.sin(x*0.3)*Math.cos(z*0.27)*mask;
+    p.setY(i,h-4);
+  }
+  geo.computeVertexNormals();
+  var m=new THREE.ShaderMaterial({ uniforms:U,
+    vertexShader:'varying vec3 vW; varying vec3 vNo; void main(){ vec4 w=modelMatrix*vec4(position,1.0); vW=w.xyz; vNo=normal; gl_Position=projectionMatrix*viewMatrix*w; }',
+    fragmentShader:['precision highp float;',GLSL_COMMON,'varying vec3 vW; varying vec3 vNo;',
+      'void main(){ vec3 n=normalize(vNo); float ndl=max(dot(n,sun),0.0);',
+      ' float rock=smoothstep(0.75,0.55,n.y); vec3 alb=mix(vec3(0.20,0.29,0.15),vec3(0.42,0.38,0.33),rock);',
+      ' alb*=0.8+0.4*vnoise(vW.xz*0.15); vec3 col=alb*(vec3(1.0,0.95,0.86)*ndl*0.9+textureCube(env,vec3(0.0,1.0,0.0)).rgb*0.35);',
+      ' gl_FragColor=vec4(horizonFog(col,vW,60.0,420.0),1.0); }'].join('\n') });
+  var hill=new THREE.Mesh(geo,m); scene.add(hill);
+})();
+
+/* Farol à esquerda, veleiro à direita, gaivotas no céu */
+var LIGHTHOUSE=new THREE.Vector3(-95,8,-150), SAILBOAT=new THREE.Vector3(85,0,-130), gulls=[], boat;
+(function(){
+  var c=document.createElement('canvas'); c.width=16; c.height=256; var g=c.getContext('2d');
+  for(var i=0;i<6;i++){ g.fillStyle=i%2?'#c9332b':'#f3f0ea'; g.fillRect(0,i*256/6,16,256/6+1); }
+  var lh=new THREE.Group();
+  var rock=new THREE.Mesh(new THREE.SphereGeometry(9,14,10),new THREE.MeshLambertMaterial({color:0x5b5a55})); rock.scale.set(1.4,0.5,1.1); rock.position.y=-1; lh.add(rock);
+  var tower=new THREE.Mesh(new THREE.CylinderGeometry(1.3,1.8,16,16),new THREE.MeshLambertMaterial({map:new THREE.CanvasTexture(c)})); tower.position.y=10; lh.add(tower);
+  var lamp=new THREE.Mesh(new THREE.CylinderGeometry(1.1,1.1,1.6,12),new THREE.MeshLambertMaterial({color:0xfff2c4, emissive:0x6b5a20})); lamp.position.y=18.8; lh.add(lamp);
+  var roof=new THREE.Mesh(new THREE.ConeGeometry(1.5,1.6,12),new THREE.MeshLambertMaterial({color:0xb22e27})); roof.position.y=20.4; lh.add(roof);
+  lh.position.set(-95,0,-150); scene.add(lh);
+  boat=new THREE.Group();
+  var hull=new THREE.Mesh(new THREE.BoxGeometry(1.6,0.9,6),new THREE.MeshLambertMaterial({color:0xf4f4f2})); hull.position.y=0.3; boat.add(hull);
+  var mast=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,8,6),new THREE.MeshLambertMaterial({color:0xcccccc})); mast.position.y=4.6; boat.add(mast);
+  var sh=new THREE.Shape(); sh.moveTo(0,0); sh.lineTo(0,7.2); sh.lineTo(2.8,0); sh.lineTo(0,0);
+  var sail=new THREE.Mesh(new THREE.ShapeGeometry(sh),new THREE.MeshLambertMaterial({color:0xfbfaf6, side:THREE.DoubleSide})); sail.position.set(0.05,1.0,-0.4); sail.rotation.y=Math.PI/2; boat.add(sail);
+  boat.position.copy(SAILBOAT); boat.rotation.y=0.6; scene.add(boat);
+  var gm=new THREE.MeshBasicMaterial({color:0x3d4247, side:THREE.DoubleSide});
+  for(var k=0;k<5;k++){
+    var gl=new THREE.Group(), w1=new THREE.Mesh(new THREE.PlaneGeometry(0.55,0.09),gm), w2=w1.clone();
+    w1.geometry=w1.geometry.clone(); w1.geometry.translate(0.27,0,0); w2.geometry=w1.geometry.clone(); w2.geometry.scale(-1,1,1);
+    gl.add(w1); gl.add(w2); gl.userData={r:14+k*5, ph:k*1.3, sp:0.12+k*0.02, h:16+k*2.5, w1:w1, w2:w2}; scene.add(gl); gulls.push(gl);
+  }
+})();
+
+/* Debaixo d'água: raios de luz, bolhas da expiração, partículas suspensas */
+function dotTex(soft){
+  var c=document.createElement('canvas'); c.width=c.height=64; var g=c.getContext('2d'), gr=g.createRadialGradient(32,32,2,32,32,30);
+  gr.addColorStop(0,'rgba(255,255,255,1)'); gr.addColorStop(soft?0.4:0.75,'rgba(230,250,255,'+(soft?0.5:0.9)+')'); gr.addColorStop(1,'rgba(230,250,255,0)');
+  g.fillStyle=gr; g.fillRect(0,0,64,64); if(!soft){ g.strokeStyle='rgba(255,255,255,0.9)'; g.lineWidth=3; g.beginPath(); g.arc(32,32,24,0,Math.PI*2); g.stroke(); }
+  return new THREE.CanvasTexture(c);
+}
+var uw=new THREE.Group(); uw.visible=false; scene.add(uw);
+var rays=[];
+(function(){
+  var c=document.createElement('canvas'); c.width=32; c.height=256; var g=c.getContext('2d'), gr=g.createLinearGradient(0,0,0,256);
+  gr.addColorStop(0,'rgba(220,255,250,0.5)'); gr.addColorStop(1,'rgba(220,255,250,0)'); g.fillStyle=gr; g.fillRect(0,0,32,256);
+  var h=g.createLinearGradient(0,0,32,0); 
+  var tex=new THREE.CanvasTexture(c);
+  for(var i=0;i<9;i++){
+    var m=new THREE.Mesh(new THREE.PlaneGeometry(0.5+Math.random()*0.8,7),new THREE.MeshBasicMaterial({map:tex, transparent:true, opacity:0.35, depthWrite:false, blending:THREE.AdditiveBlending, side:THREE.DoubleSide}));
+    m.userData={a:Math.random()*Math.PI*2, r:1.5+Math.random()*5, ph:Math.random()*6}; uw.add(m); rays.push(m);
+  }
+})();
+var BUB=40, bubPos=new Float32Array(BUB*3), bubLife=new Float32Array(BUB);
+var bubGeo=new THREE.BufferGeometry(); bubGeo.setAttribute('position',new THREE.BufferAttribute(bubPos,3));
+var bubbles3d=new THREE.Points(bubGeo,new THREE.PointsMaterial({size:0.05, map:dotTex(false), transparent:true, depthWrite:false})); bubbles3d.frustumCulled=false; scene.add(bubbles3d);
+for(var bi=0;bi<BUB;bi++){ bubLife[bi]=0; bubPos[bi*3+1]=-999; }
+var bubNext=0;
+function emitBubbles(n){
+  var f=new THREE.Vector3(0,-0.12,-0.25).applyQuaternion(head.quaternion);
+  for(var i=0;i<BUB && n>0;i++){ if(bubLife[i]<=0){ bubLife[i]=1; bubPos[i*3]=head.position.x+f.x+(Math.random()-0.5)*0.06; bubPos[i*3+1]=head.position.y+f.y; bubPos[i*3+2]=head.position.z+f.z+(Math.random()-0.5)*0.06; n--; } }
+}
+var SNOW=260, snowPos=new Float32Array(SNOW*3);
+for(var si=0;si<SNOW;si++){ snowPos[si*3]=(Math.random()-0.5)*10; snowPos[si*3+1]=(Math.random()-0.5)*3; snowPos[si*3+2]=(Math.random()-0.5)*10; }
+var snowGeo=new THREE.BufferGeometry(); snowGeo.setAttribute('position',new THREE.BufferAttribute(snowPos,3));
+var snow=new THREE.Points(snowGeo,new THREE.PointsMaterial({size:0.025, map:dotTex(true), transparent:true, opacity:0.7, depthWrite:false})); uw.add(snow);
+
+/* Luz para os objetos */
+scene.add(new THREE.HemisphereLight(0xcfe3f2,0xb9a27c,0.55));
+var dl=new THREE.DirectionalLight(0xfff3e0,0.95); dl.position.copy(SUN).multiplyScalar(10); scene.add(dl);
+
+/* Lugar seguro: toalha, guarda-sol e bolsa perto do nível 1 */
+function stripes(colors,w,h,vertical){
+  var c=document.createElement('canvas'); c.width=w; c.height=h; var g=c.getContext('2d'), n=colors.length*3;
+  for(var i=0;i<n;i++){ g.fillStyle=colors[i%colors.length]; if(vertical) g.fillRect(i*w/n,0,w/n+1,h); else g.fillRect(0,i*h/n,w,h/n+1); }
+  return new THREE.CanvasTexture(c);
+}
+var UMBRELLA=new THREE.Vector3();
+(function(){
+  var tx=-1.9, tz=19.6, y=sandH(tz);
+  var towel=new THREE.Mesh(new THREE.PlaneGeometry(0.95,1.9), new THREE.MeshLambertMaterial({map:stripes(['#1f7a8c','#f2efe6','#e8a04a'],64,256,false)}));
+  towel.rotation.x=-Math.PI/2; towel.rotation.z=0.15; towel.position.set(tx,y+0.02,tz); scene.add(towel);
+  var pole=new THREE.Mesh(new THREE.CylinderGeometry(0.022,0.022,2.3,8), new THREE.MeshLambertMaterial({color:0xe7e3da}));
+  pole.position.set(tx-0.7,y+1.12,tz-0.5); pole.rotation.z=0.08; scene.add(pole);
+  var canopy=new THREE.Mesh(new THREE.ConeGeometry(1.35,0.48,16,1,true), new THREE.MeshLambertMaterial({map:stripes(['#d9473b','#f6f1e7'],256,16,true), side:THREE.DoubleSide}));
+  canopy.position.set(tx-0.62,y+2.32,tz-0.5); canopy.rotation.z=0.08; scene.add(canopy);
+  UMBRELLA.set(tx-0.62,y+2.1,tz-0.5);
+  var bag=new THREE.Mesh(new THREE.BoxGeometry(0.42,0.3,0.18), new THREE.MeshLambertMaterial({color:0x2b5d73}));
+  bag.position.set(tx+0.65,y+0.15,tz+0.4); bag.rotation.y=0.4; scene.add(bag);
+  var sandals=new THREE.MeshLambertMaterial({color:0x3a3a3a});
+  [[-0.08,0],[0.1,0.05]].forEach(function(o){ var s=new THREE.Mesh(new THREE.BoxGeometry(0.1,0.02,0.26),sandals); s.position.set(tx+0.2+o[0],y+0.01,tz+1.2+o[1]); s.rotation.y=0.2; scene.add(s); });
+})();
+
+/* Boias que marcam o caminho (níveis 3, 4 e 5) */
+var buoys=[];
+function numTex(n){
+  var c=document.createElement('canvas'); c.width=c.height=128; var g=c.getContext('2d');
+  g.fillStyle='#f6f3ea'; g.beginPath(); g.arc(64,64,60,0,Math.PI*2); g.fill();
+  g.fillStyle='#0f2730'; g.font='700 78px "Sora",system-ui,sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText(String(n),64,70);
+  return new THREE.CanvasTexture(c);
+}
+[2,3,4].forEach(function(li){
+  var g=new THREE.Group(), mat=new THREE.MeshLambertMaterial({color:0xf08a24, emissive:0x3a1a00});
+  g.add(new THREE.Mesh(new THREE.SphereGeometry(0.28,20,14), mat));
+  g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.285,0.285,0.08,20), new THREE.MeshLambertMaterial({color:0xf6f3ea})));
+  var label=new THREE.Sprite(new THREE.SpriteMaterial({map:numTex(li+1), depthWrite:false})); label.scale.set(0.34,0.34,1); label.position.y=0.62; g.add(label);
+  g.position.set(1.5,0,LEVELS[li].z-2.6); scene.add(g);
+  buoys.push({g:g, mat:mat, level:li});
+});
+
+/* Cardume que nada ao redor de quem está na água */
+var fishes=[];
+(function(){
+  var cols=[0xf2a33a,0xf4d35e,0x3fa7c9,0xf2a33a,0xe9e4d4,0xf4d35e,0x3fa7c9,0xf2a33a,0xf4d35e,0x3fa7c9];
+  for(var i=0;i<10;i++){
+    var f=new THREE.Group(), m=new THREE.MeshLambertMaterial({color:cols[i]});
+    var body=new THREE.Mesh(new THREE.SphereGeometry(1,12,8), m); body.scale.set(0.13,0.055,0.04); f.add(body);
+    var tail=new THREE.Mesh(new THREE.ConeGeometry(0.05,0.09,4), m); tail.rotation.z=Math.PI/2; tail.position.x=-0.15; f.add(tail);
+    f.userData={ r:1.1+Math.random()*1.3, ph:Math.random()*Math.PI*2, sp:(0.16+Math.random()*0.12)*(i%3===0?-1:1), dy:-0.35-Math.random()*0.3, tail:tail, body:body, seen:0, glow:0 };
+    f.visible=false; scene.add(f); fishes.push(f);
+  }
+})();
+
+/* Retícula e cortina de transição presas ao olhar */
+var reticle=new THREE.Group(); reticle.position.z=-2.8; head.add(reticle);
+var dot=new THREE.Mesh(new THREE.RingGeometry(0.03,0.05,32), new THREE.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:0.9, depthTest:false}));
+var prog=new THREE.Mesh(new THREE.RingGeometry(0.065,0.09,32,1), new THREE.MeshBasicMaterial({color:0x4fbcd4, depthTest:false}));
+dot.renderOrder=prog.renderOrder=999; reticle.add(dot); reticle.add(prog); prog.geometry.setDrawRange(0,0);
+var veilMat=new THREE.MeshBasicMaterial({color:0x000000, transparent:true, opacity:1, depthTest:false, depthWrite:false});
+var veil=new THREE.Mesh(new THREE.PlaneGeometry(4,4), veilMat); veil.position.z=-0.3; veil.renderOrder=1000; head.add(veil);
+var tintMat=new THREE.MeshBasicMaterial({color:0x1f7f93, transparent:true, opacity:0, depthTest:false, depthWrite:false});
+var tint=new THREE.Mesh(new THREE.PlaneGeometry(4,4), tintMat); tint.position.z=-0.31; tint.renderOrder=998; head.add(tint);
+
+/* ---------- Painéis ---------- */
+var FONT='"Sora","Inter",system-ui,sans-serif';
+function wrap(g,text,maxW){
+  var words=String(text).split(' '), lines=[], line='';
+  words.forEach(function(w){ var tt=line?line+' '+w:w; if(g.measureText(tt).width>maxW && line){ lines.push(line); line=w; } else line=tt; });
+  if(line) lines.push(line); return lines;
+}
+function roundRect(g,x,y,w,h,r){ g.beginPath(); g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r); g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath(); }
+function makeCanvasMesh(w,h,draw){
+  var PX=420, c=document.createElement('canvas'); c.width=Math.round(w*PX); c.height=Math.round(h*PX);
+  var g=c.getContext('2d'), tex=new THREE.CanvasTexture(c); tex.minFilter=THREE.LinearFilter; tex.generateMipmaps=false;
+  var mesh=new THREE.Mesh(new THREE.PlaneGeometry(w,h), new THREE.MeshBasicMaterial({map:tex, transparent:true, depthWrite:false, depthTest:false}));
+  mesh.renderOrder=10;
+  mesh.userData.redraw=function(){ g.clearRect(0,0,c.width,c.height); draw(g,c.width,c.height,mesh.userData); tex.needsUpdate=true; };
+  mesh.userData.redraw(); return mesh;
+}
+function card(w,h,title,body,eyebrow){
+  return makeCanvasMesh(w,h,function(g,W,H,ud){
+    roundRect(g,4,4,W-8,H-8,34); g.fillStyle='rgba(6,26,33,0.8)'; g.fill();
+    g.textAlign='center'; g.textBaseline='middle';
+    var t=ud.title!==undefined?ud.title:title, b=ud.body!==undefined?ud.body:body, e=ud.eyebrow!==undefined?ud.eyebrow:eyebrow;
+    var EF=30, TF=58, BF=40, EL=44, TL=70, BL=52, GAP=12;
+    g.font='600 '+TF+'px '+FONT; var tl=t?wrap(g,t,W*0.9):[];
+    g.font='400 '+BF+'px '+FONT; var bl=b?wrap(g,b,W*0.88):[];
+    var total=(e?EL:0)+tl.length*TL+(tl.length&&bl.length?GAP:0)+bl.length*BL, y=(H-total)/2;
+    if(e){ g.fillStyle='#8fd6e6'; g.font='600 '+EF+'px '+FONT; g.fillText(e.toUpperCase(),W/2,y+EL/2); y+=EL; }
+    g.fillStyle='#ffffff'; g.font='600 '+TF+'px '+FONT; tl.forEach(function(l){ g.fillText(l,W/2,y+TL/2); y+=TL; });
+    if(tl.length&&bl.length) y+=GAP;
+    g.fillStyle='rgba(255,255,255,0.88)'; g.font='400 '+BF+'px '+FONT; bl.forEach(function(l){ g.fillText(l,W/2,y+BL/2); y+=BL; });
+  });
+}
+function button(label,w,h,onSelect,ring){
+  var m=makeCanvasMesh(w,h,function(g,W,H,ud){
+    roundRect(g,6,6,W-12,H-12,Math.min(28,H*0.3));
+    g.fillStyle=ud.hover?'#4fbcd4':'rgba(6,26,33,0.85)'; g.fill();
+    g.lineWidth=6; g.strokeStyle=ring||'rgba(255,255,255,0.55)'; g.stroke();
+    g.fillStyle=ud.hover?'#04212a':'#ffffff'; g.textAlign='center'; g.textBaseline='middle';
+    g.font='600 '+Math.round(H*0.38)+'px '+FONT; g.fillText(ud.label,W/2,H*0.53);
+  });
+  m.userData.label=label; m.userData.button=true; m.userData.onSelect=onSelect; m.userData.redraw();
+  m.userData.setHover=function(v){ if(m.userData.hover!==v){ m.userData.hover=v; m.userData.redraw(); } };
+  return m;
+}
+function placeAt(obj,parent,yawDeg,y,dist){
+  var a=yawDeg*Math.PI/180; obj.position.set(Math.sin(a)*dist,y,-Math.cos(a)*dist);
+  parent.add(obj); obj.lookAt(0,y*0.4,0); return obj;
+}
+
+/* ---------- Grupos que acompanham a pessoa ---------- */
+var phaseGroup=new THREE.Group(); scene.add(phaseGroup);
+var ctrlGroup=new THREE.Group(); scene.add(ctrlGroup);
+var subtitle=card(3.0,0.5,'',' '); subtitle.visible=false; scene.add(subtitle);
+var breath=new THREE.Group(); breath.visible=false; scene.add(breath);
+var ringMesh=new THREE.Mesh(new THREE.RingGeometry(0.62,0.7,64), new THREE.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:0.92, depthTest:false, depthWrite:false}));
+var discMesh=new THREE.Mesh(new THREE.CircleGeometry(0.62,64), new THREE.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:0.16, depthTest:false, depthWrite:false}));
+ringMesh.renderOrder=discMesh.renderOrder=9;
+var breathScale=new THREE.Group(); breathScale.add(discMesh); breathScale.add(ringMesh); breath.add(breathScale);
+var breathLabel=card(1.1,0.22,'Inspire',''); breathLabel.position.set(0,-0.9,0.01); breath.add(breathLabel);
+
+function headYaw(){ return new THREE.Euler().setFromQuaternion(head.quaternion,'YXZ').y; }
+function anchor(grp,dist,y){ // coloca um objeto à frente do olhar atual, na altura dos olhos
+  var a=headYaw(); grp.position.set(head.position.x-Math.sin(a)*dist, head.position.y+y, head.position.z-Math.cos(a)*dist); grp.rotation.set(0,a,0);
+}
+function clearPhase(){ while(phaseGroup.children.length) phaseGroup.remove(phaseGroup.children[0]); phaseGroup.position.set(0,0,0); phaseGroup.rotation.set(0,0,0); phaseGroup.updateMatrixWorld(true); }
+function showPhase(){ phaseGroup.position.copy(head.position); phaseGroup.rotation.y=headYaw(); }
+
+/* ---------- Tempo da sessão (para quando pausa) ---------- */
+var S={ running:false, stereo:false, paused:false, token:0, clock:0, waiters:[], ampTarget:1, breathing:false, breathT:0, lastCue:'', level:0 };
+function wait(sec){
+  var tok=S.token;
+  return new Promise(function(res,rej){ S.waiters.push({until:S.clock+sec, res:res, rej:rej, tok:tok}); });
+}
+function tickWaiters(){
+  var keep=[]; S.waiters.forEach(function(w){ if(w.tok!==S.token) w.rej('stop'); else if(S.clock>=w.until) w.res(); else keep.push(w); }); S.waiters=keep;
+}
+function realWait(ms){ var tok=S.token; return new Promise(function(res,rej){ setTimeout(function(){ tok===S.token?res():rej('stop'); }, ms/FAST()); }); }
+
+/* ---------- Voz e legenda ---------- */
+var voice=null;
+function pickVoice(){ if(!window.speechSynthesis) return; var vs=speechSynthesis.getVoices(); voice=vs.filter(function(v){ return /^pt[-_]BR/i.test(v.lang); })[0]||vs.filter(function(v){ return /^pt/i.test(v.lang); })[0]||null; }
+if(window.speechSynthesis){ pickVoice(); speechSynthesis.onvoiceschanged=pickVoice; }
+function showSub(text){
+  if(!text){ subtitle.visible=false; return; }
+  subtitle.userData.title=''; subtitle.userData.body=text; subtitle.userData.redraw(); subtitle.visible=true; anchor(subtitle,3.2,-0.8);
+}
+function speak(text){
+  if(!$('#narr').checked || !window.speechSynthesis || FAST()>1) return;
+  try{ speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance(text); u.lang='pt-BR'; u.rate=0.9; if(voice) u.voice=voice; speechSynthesis.speak(u); }catch(e){}
+}
+function line(text){ showSub(text); speak(text); return wait(1.2+text.length*0.072); }
+
+/* ---------- Escolhas pelo olhar ---------- */
+var pending=null, DBG={}; if(location.hash==='#rapido') window.__vr=DBG;
+function rate(question){
+  clearPhase(); showSub('');
+  return new Promise(function(res){
+    pending=res; DBG.rate=function(n){ pending=null; clearPhase(); res(n); };
+    placeAt(card(2.8,0.66,question,'0 = nenhum medo · 10 = medo máximo',LEVELS[S.level].name), phaseGroup, 0, 0.1, 3);
+    for(var i=0;i<=10;i++)(function(n){
+      placeAt(button(String(n),0.3,0.3,function(){ pending=null; clearPhase(); res(n); },'hsl('+(170-n*15)+',70%,62%)'), phaseGroup, (n-5)*6.8, -0.5, 3);
+    })(i);
+    showPhase();
+  });
+}
+function choose(title,body,opts,extra){
+  clearPhase(); showSub('');
+  return new Promise(function(res){
+    DBG.choose=function(k){ clearPhase(); res(k); }; DBG.keys=opts.map(function(o){ return o[0]; });
+    placeAt(card(2.8,0.66,title,body,LEVELS[S.level].name), phaseGroup, 0, 0.12, 3);
+    var n=opts.length, spread=14;
+    opts.forEach(function(o,i){
+      placeAt(button(o[1],0.86,0.28,function(){ clearPhase(); res(o[0]); }), phaseGroup, (i-(n-1)/2)*spread, -0.45, 3);
+    });
+    if(extra) placeAt(button(extra[1],0.7,0.22,function(){ clearPhase(); res(extra[0]); },'rgba(255,255,255,0.3)'), phaseGroup, 0, -0.85, 3);
+    showPhase();
+  });
+}
+
+/* ---------- Respiração que acalma o mar ---------- */
+var CYCLE=10;
+function ease(x){ return 0.5-0.5*Math.cos(Math.PI*x); }
+async function calm(cycles,overhead){
+  await line(overhead?'Vamos respirar juntos, olhando para o céu. A cada respiração, o mar balança mais devagar.':'Vamos respirar juntos. Repare: enquanto você respira devagar, o mar se acalma com você.');
+  if(overhead){ breath.position.set(head.position.x,head.position.y+3.6,head.position.z); breath.rotation.set(Math.PI/2,0,0); }
+  else anchor(breath,4,0.55);
+  breath.visible=true; S.breathT=0; S.breathing=true; S.lastCue=''; S.ampTarget=Math.min(S.ampTarget,0.3);
+  await wait(CYCLE*cycles);
+  S.breathing=false; breath.visible=false;
+  await line('Muito bem. O mar ficou mais calmo, e você também pode ficar.');
+}
+function updateBreath(dt){
+  if(!S.breathing) return;
+  S.breathT+=dt; var cyc=Math.floor(S.breathT/CYCLE), p=S.breathT-cyc*CYCLE, s, cue;
+  if(p<4){ s=0.4+0.6*ease(p/4); cue='Inspire'; } else { s=1-0.6*ease((p-4)/6); cue='Solte o ar'; }
+  breathScale.scale.set(s,s,1);
+  var key=cyc+cue;
+  if(key!==S.lastCue){
+    S.lastCue=key; breathLabel.userData.title=cue; breathLabel.userData.redraw();
+    var msg=cue==='Inspire'?'Inspire pelo nariz, contando até quatro':'Solte o ar devagar pela boca';
+    showSub(msg); if(cyc<1) speak(msg);
+  }
+}
+
+/* ---------- Movimento entre níveis (com cortina, para não enjoar) ---------- */
+var fade={ from:1, to:1, t0:0, dur:0 };
+function veilTo(v,ms){ fade.from=veilMat.opacity; fade.to=v; fade.t0=performance.now(); fade.dur=ms/FAST(); return realWait(ms); }
+function updateVeil(){
+  var k=fade.dur?Math.min(1,(performance.now()-fade.t0)/fade.dur):1; veilMat.opacity=fade.from+(fade.to-fade.from)*k; veil.visible=veilMat.opacity>0.01;
+}
+/* Boia salva-vidas de apoio (do pescoço em diante) */
+var lifebuoy=(function(){
+  var c=document.createElement('canvas'); c.width=256; c.height=16; var g=c.getContext('2d');
+  for(var i=0;i<8;i++){ g.fillStyle=i%2?'#f4f1ea':'#d9362b'; g.fillRect(i*32,0,33,16); }
+  var m=new THREE.Mesh(new THREE.TorusGeometry(0.33,0.1,14,40), new THREE.MeshLambertMaterial({map:new THREE.CanvasTexture(c), emissive:0x220800}));
+  m.rotation.x=-Math.PI/2; m.visible=false; scene.add(m); return m;
+})();
+var LIFEBUOY=new THREE.Vector3();
+
+/* Corpo simples para ver a água nas pernas */
+var body=new THREE.Group(); scene.add(body);
+(function(){
+  var skin=new THREE.MeshLambertMaterial({color:0xa8775a}), suit=new THREE.MeshLambertMaterial({color:0x1d4f63});
+  function blob(m,sx,sy,sz,x,y,z){ var o=new THREE.Mesh(new THREE.SphereGeometry(1,20,14),m); o.scale.set(sx,sy,sz); o.position.set(x,y,z); body.add(o); return o; }
+  [-0.1,0.1].forEach(function(x){
+    var leg=new THREE.Mesh(new THREE.CylinderGeometry(0.075,0.05,0.82,14,1,true),skin); leg.position.set(x,0.47,0.06); body.add(leg);
+    blob(skin,0.075,0.07,0.075,x,0.88,0.06);
+    blob(skin,0.052,0.038,0.12,x,0.05,0.0);
+  });
+  blob(suit,0.19,0.13,0.13,0,0.95,0.1);
+  blob(skin,0.18,0.3,0.12,0,1.2,0.16);
+})();
+var bodyYaw=0;
+
+/* Círculo para onde olhar firme e caminhar */
+var target=new THREE.Group(); target.visible=false; scene.add(target);
+var tRing=new THREE.Mesh(new THREE.TorusGeometry(0.34,0.025,12,56), new THREE.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:0.95, depthTest:false}));
+var tDisc=new THREE.Mesh(new THREE.CircleGeometry(0.3,48), new THREE.MeshBasicMaterial({color:0x8fe3f2, transparent:true, opacity:0.22, depthTest:false, depthWrite:false}));
+tRing.renderOrder=tDisc.renderOrder=8; target.add(tDisc); target.add(tRing);
+
+/* Vinheta suave durante a caminhada (reduz enjoo) */
+var vig=(function(){
+  var c=document.createElement('canvas'); c.width=c.height=256; var g=c.getContext('2d');
+  var gr=g.createRadialGradient(128,128,40,128,128,128); gr.addColorStop(0,'rgba(0,0,0,0)'); gr.addColorStop(0.55,'rgba(0,0,0,0)'); gr.addColorStop(1,'rgba(0,0,0,0.85)');
+  g.fillStyle=gr; g.fillRect(0,0,256,256);
+  var m=new THREE.Mesh(new THREE.PlaneGeometry(0.62,0.62), new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c), transparent:true, opacity:0, depthTest:false, depthWrite:false}));
+  m.position.z=-0.25; m.renderOrder=997; head.add(m); return m;
+})();
+var vigTarget=0;
+
+function standAt(i){
+  var z=LEVELS[i].z; head.position.set(0, sandH(z)+EYE, z); S.level=i;
+  var inWater=sandH(z)<-0.6; fishes.forEach(function(f){ f.visible=inWater; f.userData.seen=0; });
+  buoys.forEach(function(b){ b.next=(b.level===i+1); });
+  S.ampTarget=LEVELS[i].calm?0.45:1; S.floating=false; body.visible=true; lifebuoy.visible=i>=6;
+  audioForLevel(i);
+}
+async function moveTo(i){
+  clearPhase(); showSub('');
+  await veilTo(1,700); standAt(i); await realWait(250); await veilTo(0,900);
+}
+var WALK_LINES={
+  1:['Caminhe devagar. Sinta a areia morna e macia sob os pés.','A areia fica mais firme e úmida perto da água. Ouça as ondas chegando.'],
+  2:['Dê passos curtos. A água sobe pelos tornozelos, pelas canelas.','Sinta a água empurrar de leve e voltar. Empurra e volta.'],
+  3:['Continue no seu ritmo. A água sobe pelas coxas.','Um arrepio no começo é normal. Logo a água fica morna.'],
+  4:['Respire fundo enquanto anda. A água chega perto da cintura.'],
+  5:['Mais alguns passos. A água sobe pela barriga, até o peito.'],
+  6:['Passos bem lentos agora. Aqui o mar está ainda mais calmo.','A água chega aos ombros, e o seu rosto continua fora da água.']
+};
+async function walkTo(i){
+  var z0=head.position.z, z1=LEVELS[i].z;
+  target.position.set(0, head.position.y-0.15, z0-3.4); target.visible=true;
+  var ok=await hold('Quando quiser seguir, olhe firme para o círculo à sua frente.', function(){ return angleTo(target.position)<11; }, 2, 45);
+  target.visible=false;
+  if(!ok){ await line('Tudo bem. Ficamos aqui por enquanto.'); return false; }
+  showSub(''); vigTarget=1; S.walking=true; S.ampTarget=LEVELS[i].calm?0.45:S.ampTarget;
+  var D=Math.abs(z1-z0)/0.9, t0=S.clock, lastStep=0;
+  var lines=(WALK_LINES[i]||[]).slice();
+  var talk=(async function(){ for(var k=0;k<lines.length;k++) await line(lines[k]); })();
+  while(S.clock-t0<D){
+    var k=ease((S.clock-t0)/D), z=z0+(z1-z0)*k; head.position.z=z; head.position.y=sandH(z)+EYE;
+    if(S.clock-lastStep>0.75){ lastStep=S.clock; step(sandH(z)<tide(worldT)); }
+    await wait(0.03);
+  }
+  await talk; S.walking=false; vigTarget=0; standAt(i); return true;
+}
+
+/* ---------- Tarefas de atenção guiadas pelo olhar ---------- */
+var gazeDir=new THREE.Vector3(), tmpV=new THREE.Vector3();
+function look(){ return gazeDir.set(0,0,-1).applyQuaternion(head.quaternion); }
+function angleTo(p){ tmpV.copy(p).sub(head.position).normalize(); return Math.acos(Math.max(-1,Math.min(1,look().dot(tmpV))))*180/Math.PI; }
+var task={p:0};
+async function hold(prompt,test,secs,timeout){
+  await line(prompt);
+  var held=0, total=0;
+  while(held<secs && total<timeout){ await wait(0.05); total+=0.05; if(test()||(FAST()>1&&total>1.5)) held+=0.05; else held=Math.max(0,held-0.08); task.p=held/secs; }
+  task.p=0; return held>=secs;
+}
+var T={
+  umbrella:function(){ return angleTo(UMBRELLA)<16; },
+  sea:function(){ var d=look(); return d.z<-0.85 && Math.abs(d.y)<0.35; },
+  feet:function(){ return look().y<-0.6; },
+  back:function(){ return look().z>0.75; },
+  horizon:function(){ var d=look(); return d.z<-0.9 && d.y>-0.12 && d.y<0.2; }
+};
+async function findFish(n,timeout){
+  await line('Agora uma tarefa: encontre '+n+' peixes nadando ao seu redor. Deixe o ponto branco em cima de cada um.');
+  var found=0, total=0;
+  while(found<n && total<timeout){
+    await wait(0.05); total+=0.05; var best=null;
+    if(FAST()>1 && total>1.5*(found+1)){ found++; showSub('Peixes encontrados: '+found+' de '+n); continue; }
+    fishes.forEach(function(f){ if(f.visible && f.userData.seen<1 && angleTo(f.position)<9) best=f; });
+    fishes.forEach(function(f){ if(f!==best && f.userData.seen<1) f.userData.seen=Math.max(0,f.userData.seen-0.02); });
+    if(best){ best.userData.seen+=0.05/0.7; task.p=best.userData.seen;
+      if(best.userData.seen>=1){ found++; best.userData.glow=1; task.p=0; showSub('Peixes encontrados: '+found+' de '+n); } }
+    else task.p=0;
+  }
+  task.p=0; return found;
+}
+
+/* ---------- Roteiro clínico ---------- */
+var LEVEL_RUN=[
+  async function(){
+    await line('Boas-vindas. Hoje quem decide o ritmo é você. Vamos caminhar para dentro do mar aos poucos, um passo de cada vez.');
+    await line('Antes, vamos encontrar o seu lugar seguro. Vire para trás e procure o guarda-sol vermelho e branco.');
+    if(await hold('Mantenha o olhar no guarda-sol por alguns segundos.',T.umbrella,2.5,30)) await line('Isso. Ali estão a sua toalha e as suas coisas. Você pode olhar para lá sempre que precisar.');
+    else await line('Tudo bem. O guarda-sol fica atrás de você, à esquerda. Ele vai estar sempre ali.');
+    await line('Agora vamos conhecer o lugar com calma, um olhar de cada vez.');
+    if(await hold('Olhe para cima. Veja o céu, as nuvens e a luz do sol.',function(){ return look().y>0.5; },3,30)) await line('Repare nas gaivotas voando devagar lá no alto.');
+    if(await hold('Agora olhe para a sua esquerda, bem para o lado.',function(){ return look().x<-0.75; },2.5,30)) await line('Ali está o morro verde e, na ponta das pedras, um farol. Ele marca o caminho de quem está no mar.');
+    if(await hold('Agora olhe para a sua direita.',function(){ return look().x>0.75; },2.5,30)) await line('Um veleiro passa devagar, lá longe. O mar está tão calmo que ele quase não balança.');
+    if(await hold('Olhe para os seus pés, na areia.',T.feet,2,25)) await line('Sinta os pés firmes no chão. A areia está morna.');
+    await hold('Agora volte a olhar para o mar, à sua frente.',T.sea,1.5,25);
+    await line('Inspire pelo nariz... e solte o ar devagar. O mar está calmo, a água é morna e transparente.');
+    await line('As boias laranja marcam o caminho. Você só vai até onde quiser.');
+  },
+  async function(){
+    await line('Pare aqui. A água está chegando bem perto.');
+    if(await hold('Olhe para os seus pés e espere a próxima onda.',T.feet,5,35)) await line('Sentiu? A água bateu nos seus pés e voltou. Fresca no começo, depois morna.');
+    await line('O mar sempre devolve a água. Ele tem um ritmo, parecido com o da sua respiração.');
+  },
+  async function(){
+    await line('A água está nos seus joelhos. Seus pés estão firmes na areia.');
+    if(await hold('Olhe para trás, para a praia.',T.back,2,25)) await line('A areia e o guarda-sol continuam logo ali.');
+  },
+  async function(){
+    await line('A água chegou às suas coxas.');
+    if(await hold('Olhe para baixo e veja as ondas passando pelas suas pernas.',T.feet,4,30)) await line('Repare na luz desenhando o fundo. A água passa e segue para a praia.');
+  },
+  async function(){
+    await line('Agora a água está na sua cintura. Você continua de pé, com a cabeça bem acima da água.');
+    var f=await findFish(3,45);
+    if(f>=3) await line('Muito bem, você encontrou os três. E para isso ficou olhando para dentro da água.');
+    else await line('Tudo bem. Os peixes continuam nadando calmos ao seu redor.');
+  },
+  async function(){
+    await line('A água chega ao seu peito. As ondas sobem um pouco, passam por você e seguem para a praia.');
+    if(await hold('Olhe para o horizonte e espere uma onda vir na sua direção.',T.horizon,5,30)) await line('Ela subiu, passou e seguiu. Nenhuma onda fica.');
+  },
+  async function(){
+    await line('A água chega ao seu pescoço. Seu rosto continua fora da água, e o mar está tranquilo.');
+    if(await hold('Olhe a superfície da água bem perto do seu rosto.',function(){ return look().y<-0.3; },4,30)) await line('Ela sobe e desce devagar, sem pressa.');
+    await line('Aqui você tem apoio. Do seu lado direito há uma boia salva-vidas.');
+    if(await hold('Olhe para a boia e deixe o olhar descansar nela.',function(){ return angleTo(LIFEBUOY)<15; },3,30)) await line('Ela está ao seu alcance o tempo todo. E a sua terapeuta está aí com você.');
+    await calm(2);
+    await line('Perceba: mesmo com a água no pescoço, a sua respiração continua tranquila.');
+  },
+  async function(){ await dive(); },
+  async function(){ await floatSea(); }
+];
+async function runLevelIntro(i){ await LEVEL_RUN[i](); }
+
+var timerCard=null;
+function setTimer(left,total){
+  var mm=Math.floor(left/60), ss=String(Math.floor(left%60)).padStart(2,'0');
+  timerCard.userData.title=mm+':'+ss; timerCard.userData.body='Respire no ritmo do círculo. Você está indo bem.'; timerCard.userData.redraw();
+}
+async function dive(){
+  S.challenge={target:0, secs:0, done:false, self:null};
+  await line('Chegou o desafio de hoje: ficar debaixo d’água e manter a respiração calma.');
+  await line('Aqui no óculos você pode respirar normalmente. O desafio é controlar a ansiedade enquanto está lá embaixo.');
+  var dur=await choose('Desafio debaixo d’água','Quanto tempo você quer ficar lá embaixo?',[['60','1 minuto'],['120','2 minutos']],['nao','Agora não']);
+  if(dur==='nao'){ await line('Tudo bem. O desafio fica para outro dia.'); return; }
+  var total=+dur; S.challenge.target=total;
+  await line('Vamos descer devagar. Inspire... e solte o ar. Um... dois... três.');
+  showSub('');
+  var y0=head.position.y, y1=sandH(head.position.z)+0.6, t0=S.clock, D=2.2; body.visible=false;
+  bubbles(1.6); emitBubbles(18);
+  while(S.clock-t0<D){ var k=ease((S.clock-t0)/D); head.position.y=y0+(y1-y0)*k; await wait(0.02); }
+  head.position.y=y1;
+  clearPhase(); S.surface=false; body.visible=false;
+  timerCard=placeAt(card(1.9,0.66,'',''), phaseGroup, 0, 0.95, 3); setTimer(total,total);
+  placeAt(button('Subir agora',0.9,0.26,function(){ S.surface=true; },'rgba(255,200,120,0.8)'), phaseGroup, 0, -1.3, 3);
+  showPhase();
+  anchor(breath,3.6,0.05); breath.visible=true; S.breathT=0; S.breathing=true; S.lastCue='';
+  var marks=[[3,'Você está debaixo d’água. Olhe a luz entrando pela superfície.'],[15,'Repare: a cada vez que você solta o ar, as bolhas sobem.'],[28,'Os peixes nadam tranquilos ao seu redor.'],[40,'Se quiser, olhe para os seus pés, na areia do fundo.'],[55,'Continue no ritmo. Inspire... e solte devagar.'],[75,'Você já passou da metade. O corpo está aprendendo que aqui é seguro.'],[100,'Perceba como a respiração ficou mais lenta.']];
+  var start=S.clock, lastSec=-1, mi=0, lastPhase='';
+  while(S.clock-start<total && !S.surface){
+    await wait(0.05);
+    var el=S.clock-start;
+    if(Math.floor(el)!==lastSec){ lastSec=Math.floor(el); setTimer(total-el,total); }
+    while(mi<marks.length && marks[mi][0]<=el){ if(marks[mi][0]<total) { showSub(marks[mi][1]); speak(marks[mi][1]); } mi++; }
+    var ph=((S.breathT%CYCLE)<4)?'in':'out'; if(ph==='out' && lastPhase==='in'){ emitBubbles(12); bubbles(0.6); } lastPhase=ph;
+    if(mi===2 && el>total/2 && total===60 && !S.half){ S.half=true; showSub('Metade do caminho. Você está indo muito bem.'); }
+  }
+  var stayed=Math.min(total,S.clock-start); S.half=false;
+  S.breathing=false; breath.visible=false; clearPhase(); showSub('');
+  S.challenge.secs=Math.round(stayed); S.challenge.done=stayed>=total-0.5;
+  var r=await rate(S.challenge.done?'Antes de subir: quanto medo você sente aqui embaixo?':'Quanto medo você sentiu aqui embaixo?');
+  S.log.push({level:S.level,r:r}); S.skipRate=true;
+  await line('Agora vamos subir devagar.');
+  bubbles(0.8); emitBubbles(14);
+  t0=S.clock; while(S.clock-t0<D){ var k2=ease((S.clock-t0)/D); head.position.y=y1+(y0-y1)*k2; await wait(0.02); }
+  head.position.y=y0; body.visible=true;
+  var mm=Math.floor(S.challenge.secs/60), ss=String(S.challenge.secs%60).padStart(2,'0');
+  if(S.challenge.done) await line('Você ficou '+(total/60)+' minuto'+(total>60?'s':'')+' debaixo d’água, respirando com calma. Desafio concluído.');
+  else await line('Você ficou '+mm+':'+ss+' debaixo d’água. Subir quando precisou também é cuidar de si. Isso conta.');
+  S.challenge.self=await choose('Avaliação do desafio','Você sente que conseguiu manter a respiração calma lá embaixo?',[['sim','Sim'],['parte','Em parte'],['nao','Não']]);
+}
+
+async function floatSea(){
+  await line('Agora vamos boiar. Deixe o corpo se deitar para trás, devagar.');
+  await veilTo(1,600); S.floating=true; body.visible=false; S.ampTarget=0.35; await realWait(200); await veilTo(0,900);
+  if(await hold('Olhe para o céu, bem acima de você.',function(){ return look().y>0.6; },3,40)){
+    await line('O mar sustenta o seu corpo. Você não precisa fazer força.');
+  }
+  await calm(2,true);
+  await line('Você está boiando no mar, olhando o céu. Fique o tempo que quiser.');
+}
+
+async function run(){
+  S.log=[]; S.max=0; S.t0=Date.now(); S.challenge=null; S.skipRate=false; S.selfEval=null;
+  standAt(0); await realWait(300); await veilTo(0,1200);
+  var i=0, intro=true;
+  for(;;){
+    if(intro){ await runLevelIntro(i); intro=false; S.max=Math.max(S.max,i); }
+    var r;
+    if(S.skipRate){ S.skipRate=false; r=S.log[S.log.length-1].r; }
+    else { r=await rate(LEVELS[i].float?'Quanto medo você sente boiando?':'Quanto medo você sente agora?'); S.log.push({level:i,r:r}); }
+    if(i===LEVELS.length-1) return finish();
+    if(r>=7){
+      await line('Obrigado por me contar. Medo alto é esperado aqui. Vamos ficar neste ponto até ele baixar um pouco.');
+      await calm(3,S.floating);
+      continue;
+    }
+    var nxt=LEVELS[i+1], opts=[];
+    if(i>0) opts.push(['voltar','Voltar um passo']);
+    opts.push(['ficar','Ficar mais']);
+    opts.push(['avancar', nxt.dive?'Ir para o desafio':nxt.float?'Boiar':'Seguir em frente']);
+    var body2 = r<=3 ? 'Medo '+r+'. Você está bem aqui.' : 'Medo '+r+'. Ficar mais um pouco costuma ajudar o medo a baixar.';
+    var c=await choose('O que você quer fazer?', body2, opts, ['encerrar','Encerrar sessão']);
+    if(c==='encerrar') return finish();
+    if(c==='ficar'){ await calm(2,S.floating); continue; }
+    if(c==='voltar'){
+      i--; if(LEVELS[i+1].dive||LEVELS[i+1].float||LEVELS[i].z!==LEVELS[i+1].z) await moveTo(i); else standAt(i);
+      await line('Tudo bem voltar. Voltar também faz parte do caminho.'); continue;
+    }
+    if(nxt.dive||nxt.float){ i++; intro=true; continue; }
+    if(await walkTo(i+1)){ i++; intro=true; }
+  }
+}
+var SELF={sim:'Sim',parte:'Em parte',nao:'Não',alem:'Fui além do que esperava',ate:'Fui até onde dava',dificil:'Foi difícil hoje'};
+async function finish(){
+  var secs=Math.round((Date.now()-S.t0)/1000), ch=S.challenge;
+  var status = ch&&ch.done ? 'concluido' : ((ch&&ch.target) || S.max>=6 ? 'parcial' : 'nao');
+  clearPhase(); showSub('');
+  if(!ch || !ch.self) S.selfEval=await choose('Avaliação da sessão','Como você avalia o que fez hoje?',[['alem','Fui além'],['ate','Fui até onde dava'],['dificil','Foi difícil']]);
+  store.set('mar-passo:last',{log:S.log, max:S.max, secs:secs, at:Date.now(), challenge:ch, status:status, selfEval:S.selfEval});
+  renderResult();
+  clearPhase(); showSub('');
+  var title=status==='concluido'?'Desafio concluído':status==='parcial'?'Desafio em andamento':'Sessão concluída';
+  var bodyTxt=status==='concluido'?'Você caminhou até o fundo e ficou '+(ch.target/60)+' min debaixo d’água respirando com calma.'
+    :'Você chegou até: '+LEVELS[S.max].short+'. Cada passo conta, e a próxima sessão começa daqui.';
+  speak(title+'. '+bodyTxt);
+  placeAt(card(2.8,0.7,title,bodyTxt,'Avaliação'), phaseGroup, 0, 0.12, 3);
+  placeAt(button('Voltar para a areia',1.2,0.28,async function(){ clearPhase(); await moveTo(0); finishButtons(); }), phaseGroup, -12, -0.45, 3);
+  placeAt(button('Sair',0.8,0.28,function(){ exitVR(); }), phaseGroup, 12, -0.45, 3);
+  showPhase();
+}
+function finishButtons(){
+  placeAt(card(2.2,0.4,'Você está na areia','Fique o tempo que quiser.'), phaseGroup, 0, 0.1, 3);
+  placeAt(button('Sair',0.8,0.28,function(){ exitVR(); }), phaseGroup, 0, -0.45, 3);
+  showPhase();
+}
+
+/* Controles perto dos pés */
+var pauseBtn;
+function buildControls(){
+  while(ctrlGroup.children.length) ctrlGroup.remove(ctrlGroup.children[0]);
+  ctrlGroup.rotation.set(0,0,0); ctrlGroup.position.set(0,0,0); ctrlGroup.updateMatrixWorld(true);
+  var a=-52*Math.PI/180, dist=2.4, y=Math.sin(a)*dist, z=-Math.cos(a)*dist;
+  pauseBtn=button('Pausar',0.62,0.24,togglePause); pauseBtn.position.set(-0.36,y,z); ctrlGroup.add(pauseBtn); pauseBtn.lookAt(-0.36,0,0);
+  var ex=button('Sair',0.62,0.24,function(){ exitVR(); }); ex.position.set(0.36,y,z); ctrlGroup.add(ex); ex.lookAt(0.36,0,0);
+}
+function togglePause(){
+  S.paused=!S.paused; pauseBtn.userData.label=S.paused?'Continuar':'Pausar'; pauseBtn.userData.redraw();
+  if(S.paused){ try{ speechSynthesis.cancel(); }catch(e){} showSub('Pausado. Olhe para Continuar quando quiser.'); }
+  else showSub('');
+}
+
+/* ---------- Áudio espacial: mar aberto à frente, arrebentação na praia ---------- */
+var actx=null, master=null, muffle=null, openSrc=null, shoreSrc=null;
+function noiseBuf(brown){
+  var len=actx.sampleRate*6, b=actx.createBuffer(1,len,actx.sampleRate), d=b.getChannelData(0), last=0;
+  for(var i=0;i<len;i++){ var w=Math.random()*2-1; if(brown){ last=(last+0.02*w)/1.02; d[i]=last*3.5; } else d[i]=w; }
+  return b;
+}
+function oceanSource(freq,lfoHz,gain){
+  var pan=actx.createPanner(); pan.panningModel='HRTF'; pan.distanceModel='inverse'; pan.refDistance=3; pan.connect(muffle);
+  var g=actx.createGain(); g.gain.value=gain; g.connect(pan);
+  var lfo=actx.createOscillator(); lfo.frequency.value=lfoHz; var lg=actx.createGain(); lg.gain.value=gain*0.7; lfo.connect(lg); lg.connect(g.gain); lfo.start();
+  var s=actx.createBufferSource(); s.buffer=noiseBuf(true); s.loop=true; var lp=actx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=freq; s.connect(lp); lp.connect(g); s.start();
+  var h=actx.createBufferSource(); h.buffer=noiseBuf(false); h.loop=true; var bp=actx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=2800; bp.Q.value=0.7; var hg=actx.createGain(); hg.gain.value=gain*0.1; h.connect(bp); bp.connect(hg); hg.connect(g); h.start();
+  return pan;
+}
+function setPos(p,x,y,z){ if(p.positionX){ p.positionX.value=x; p.positionY.value=y; p.positionZ.value=z; } else p.setPosition(x,y,z); }
+function startAudio(){
+  var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
+  if(actx){ actx.resume(); return; }
+  actx=new AC(); master=actx.createGain(); master.gain.value=0.75; master.connect(actx.destination);
+  muffle=actx.createBiquadFilter(); muffle.type='lowpass'; muffle.frequency.value=18000; muffle.connect(master);
+  openSrc=oceanSource(600,0.09,0.35); shoreSrc=oceanSource(1100,0.11,0.6);
+  setPos(shoreSrc,0,0,0.5);
+  WHITE=noiseBuf(false);
+  // água passando pelas pernas enquanto anda
+  var ws=actx.createBufferSource(); ws.buffer=WHITE; ws.loop=true; wadeF=actx.createBiquadFilter(); wadeF.type='bandpass'; wadeF.frequency.value=700; wadeF.Q.value=0.6;
+  wadeG=actx.createGain(); wadeG.gain.value=0; ws.connect(wadeF); wadeF.connect(wadeG); wadeG.connect(muffle); ws.start();
+  startMusic();
+}
+var WHITE=null, wadeF=null, wadeG=null, music=null;
+function burst(o){ // ruído curto com envelope: base dos passos e respingos
+  if(!actx) return; var t0=actx.currentTime+(o.delay||0), s=actx.createBufferSource(); s.buffer=WHITE; 
+  var f=actx.createBiquadFilter(); f.type=o.type||'bandpass'; f.frequency.value=o.freq; f.Q.value=o.q||0.8;
+  var g=actx.createGain(); g.gain.setValueAtTime(0.0001,t0); g.gain.exponentialRampToValueAtTime(o.gain,t0+(o.att||0.01)); g.gain.exponentialRampToValueAtTime(0.0001,t0+o.dur);
+  s.connect(f); f.connect(g); g.connect(muffle); s.start(t0,Math.random()*4); s.stop(t0+o.dur+0.05);
+}
+function step(inWater){
+  if(!actx) return;
+  var depth=Math.max(0,tide(worldT)-sandH(head.position.z));
+  if(!inWater || depth<0.02){ burst({freq:1600,q:0.7,gain:0.09,dur:0.11}); burst({freq:3200,q:1.2,gain:0.04,dur:0.07,delay:0.03}); return; }
+  var deep=Math.min(1,depth/1.2);
+  burst({freq:1400-deep*700,q:0.6,gain:0.16+deep*0.1,dur:0.3+deep*0.35,att:0.02});
+  burst({freq:3000,q:1.0,gain:0.06*(1-deep*0.6),dur:0.18,delay:0.05});
+}
+function footSplash(){ burst({freq:1800,q:0.5,gain:0.14,dur:0.55,att:0.06}); burst({freq:700,q:0.7,gain:0.08,dur:0.7,att:0.08,delay:0.05}); try{ if(navigator.vibrate) navigator.vibrate(25); }catch(e){} }
+function startMusic(){ // trilha ambiente suave, acordes longos
+  if(!actx || music) return;
+  var out=actx.createGain(); out.gain.value=$('#music').checked?0.05:0; out.connect(master);
+  var lp=actx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=1400; lp.connect(out);
+  var voices=[0,1,2,3].map(function(){ var o=actx.createOscillator(); o.type='triangle'; var g=actx.createGain(); g.gain.value=0.22; o.connect(g); g.connect(lp); o.start(); return o; });
+  var lfo=actx.createOscillator(); lfo.frequency.value=0.05; var lg=actx.createGain(); lg.gain.value=0.02; lfo.connect(lg); lg.connect(out.gain); lfo.start();
+  music={out:out, voices:voices, idx:-1, next:0};
+}
+var CHORDS=[[110,164.81,277.18,329.63],[146.83,220,277.18,369.99],[92.5,138.59,220,277.18],[123.47,164.81,246.94,329.63]];
+function updateMusic(){
+  if(!music) return; var now=actx.currentTime;
+  music.out.gain.setTargetAtTime($('#music').checked?0.05:0, now, 0.5);
+  if(now<music.next) return; music.idx=(music.idx+1)%CHORDS.length; music.next=now+11;
+  music.voices.forEach(function(o,k){ o.frequency.setTargetAtTime(CHORDS[music.idx][k], now, 1.8); });
+}
+function bubbles(sec){ // bolhas sintetizadas ao entrar e sair da água
+  if(!actx) return; var now=actx.currentTime;
+  for(var i=0;i<26;i++){
+    var t0=now+Math.random()*sec, o=actx.createOscillator(), g=actx.createGain(), f=300+Math.random()*700;
+    o.type='sine'; o.frequency.setValueAtTime(f,t0); o.frequency.exponentialRampToValueAtTime(f*2.6,t0+0.07);
+    g.gain.setValueAtTime(0.0001,t0); g.gain.exponentialRampToValueAtTime(0.12,t0+0.01); g.gain.exponentialRampToValueAtTime(0.0001,t0+0.09);
+    o.connect(g); g.connect(master); o.start(t0); o.stop(t0+0.12);
+  }
+}
+function audioForLevel(i){ if(!actx) return; setPos(openSrc,0,0,LEVELS[i].z-10); }
+var fwd=new THREE.Vector3(), up=new THREE.Vector3();
+function updateListener(){
+  if(!actx) return; var L=actx.listener, p=head.position;
+  fwd.set(0,0,-1).applyQuaternion(head.quaternion); up.set(0,1,0).applyQuaternion(head.quaternion);
+  if(L.forwardX){ L.forwardX.value=fwd.x; L.forwardY.value=fwd.y; L.forwardZ.value=fwd.z; L.upX.value=up.x; L.upY.value=up.y; L.upZ.value=up.z; L.positionX.value=p.x; L.positionY.value=p.y; L.positionZ.value=p.z; }
+  else { if(L.setOrientation) L.setOrientation(fwd.x,fwd.y,fwd.z,up.x,up.y,up.z); if(L.setPosition) L.setPosition(p.x,p.y,p.z); }
+  muffle.frequency.setTargetAtTime(U.under.value>0.5?380:18000, actx.currentTime, 0.15);
+  var depth=Math.max(0,tide(worldT)-sandH(head.position.z));
+  if(wadeG) wadeG.gain.setTargetAtTime(S.walking&&depth>0.05?Math.min(0.12,0.04+depth*0.08):0, actx.currentTime, 0.25);
+  updateMusic();
+}
+
+/* ---------- Cabeça: giroscópio ou arrastar ---------- */
+var gyro={has:false, q:new THREE.Quaternion()}, recentered=false, offsetYaw=0, dragYaw=0, dragPitch=0;
+var zee=new THREE.Vector3(0,0,1), eul=new THREE.Euler(), q0=new THREE.Quaternion(), q1=new THREE.Quaternion(-Math.sqrt(0.5),0,0,Math.sqrt(0.5)), qYaw=new THREE.Quaternion(), Y=new THREE.Vector3(0,1,0);
+function screenAngle(){ var a=(screen.orientation&&screen.orientation.angle!=null)?screen.orientation.angle:(window.orientation||0); return a*Math.PI/180; }
+window.addEventListener('deviceorientation',function(e){
+  if(e.alpha==null) return; var D=Math.PI/180;
+  eul.set(e.beta*D,e.alpha*D,-e.gamma*D,'YXZ'); gyro.q.setFromEuler(eul); gyro.q.multiply(q1); gyro.q.multiply(q0.setFromAxisAngle(zee,-screenAngle())); gyro.has=true;
+});
+function updateHead(){
+  if(gyro.has){
+    if(!recentered){ offsetYaw=-new THREE.Euler().setFromQuaternion(gyro.q,'YXZ').y; dragYaw=0; recentered=true; }
+    qYaw.setFromAxisAngle(Y,offsetYaw+dragYaw); head.quaternion.copy(qYaw).multiply(gyro.q);
+  } else head.quaternion.setFromEuler(new THREE.Euler(dragPitch,dragYaw,0,'YXZ'));
+}
+var drag=null;
+canvas.addEventListener('pointerdown',function(e){ drag={x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY}; if(S.stereo) flashExit(); });
+window.addEventListener('pointermove',function(e){
+  if(!drag) return; var k=S.stereo?0.004:0.005;
+  dragYaw+=(e.clientX-drag.x)*k; if(!gyro.has) dragPitch=Math.max(-1.45,Math.min(1.45,dragPitch+(e.clientY-drag.y)*k));
+  drag.x=e.clientX; drag.y=e.clientY;
+});
+window.addEventListener('pointerup',function(e){
+  if(!drag) return; var moved=Math.abs(e.clientX-drag.sx)+Math.abs(e.clientY-drag.sy); drag=null;
+  if(moved<8 && !S.stereo){
+    var r=canvas.getBoundingClientRect(), v=new THREE.Vector2(((e.clientX-r.left)/r.width)*2-1,-((e.clientY-r.top)/r.height)*2+1);
+    ray.setFromCamera(v,monoCam); var hit=ray.intersectObjects(interactive(),false)[0];
+    if(hit){ gaze.lock=hit.object; gaze.target=null; gaze.time=0; hit.object.userData.onSelect(); }
+  }
+});
+
+/* ---------- Seleção pelo olhar ---------- */
+var ray=new THREE.Raycaster(), center=new THREE.Vector2(0,0), DWELL=1.6, gaze={target:null,time:0,lock:null};
+function visibleDeep(o){ while(o){ if(!o.visible) return false; o=o.parent; } return true; }
+function interactive(){ var out=[]; [phaseGroup,ctrlGroup].forEach(function(gp){ gp.traverse(function(o){ if(o.userData&&o.userData.button&&visibleDeep(o)) out.push(o); }); }); return out; }
+function updateGaze(dt){
+  ray.setFromCamera(center,monoCam);
+  var hit=ray.intersectObjects(interactive(),false)[0], obj=hit?hit.object:null;
+  if(gaze.lock && obj!==gaze.lock) gaze.lock=null;
+  if(obj && obj===gaze.lock) obj=null;
+  if(obj!==gaze.target){ if(gaze.target) gaze.target.userData.setHover(false); gaze.target=obj; gaze.time=0; if(obj) obj.userData.setHover(true); }
+  if(gaze.target){
+    gaze.time+=dt; var f=Math.min(1,gaze.time/DWELL); prog.geometry.setDrawRange(0,Math.floor(f*32)*6);
+    prog.material.color.setHex(0x4fbcd4);
+    if(f>=1){ var t=gaze.target; t.userData.setHover(false); gaze.lock=t; gaze.target=null; gaze.time=0; prog.geometry.setDrawRange(0,0); t.userData.onSelect(); }
+  } else if(task.p>0){ prog.material.color.setHex(0xffc46b); prog.geometry.setDrawRange(0,Math.floor(Math.min(1,task.p)*32)*6); }
+  else prog.geometry.setDrawRange(0,0);
+}
+
+/* ---------- Desenho ---------- */
+var lastT=0, worldT=0;
+function resize(){ var w=window.innerWidth, h=window.innerHeight; renderer.setSize(w,h,false); $('#rotate').hidden=!(S.stereo&&h>w); }
+window.addEventListener('resize',resize);
+var lastTideUp=false;
+function updateWorld(dt){
+  boat.position.y=Math.sin(worldT*0.8)*0.12; boat.rotation.z=Math.sin(worldT*0.6)*0.05;
+  gulls.forEach(function(gl){ var u=gl.userData; u.ph+=u.sp*dt; gl.position.set(18+Math.cos(u.ph)*u.r, u.h+Math.sin(u.ph*2)*1.5, -25+Math.sin(u.ph)*u.r); gl.rotation.y=-u.ph; var fl=Math.sin(worldT*6+u.r)*0.45; u.w1.rotation.z=fl; u.w2.rotation.z=-fl; });
+  var isUnder=U.under.value>0.5; uw.visible=isUnder; uw.position.copy(head.position);
+  if(isUnder){ rays.forEach(function(m){ var d=m.userData; m.position.set(Math.cos(d.a)*d.r, 2.2, Math.sin(d.a)*d.r); m.rotation.set(0.15*Math.sin(worldT*0.5+d.ph),0,0); m.lookAt(head.position.x,m.getWorldPosition(new THREE.Vector3()).y,head.position.z); m.material.opacity=0.22+0.12*Math.sin(worldT*0.9+d.ph); }); }
+  for(var bi=0;bi<BUB;bi++){ if(bubLife[bi]>0){ bubLife[bi]-=dt*0.35; bubPos[bi*3+1]+=dt*(0.45+0.2*Math.sin(bi)); bubPos[bi*3]+=Math.sin(worldT*5+bi)*0.002; if(bubPos[bi*3+1]>waveH(0,head.position.z,worldT,U.amp.value)) bubLife[bi]=0; if(bubLife[bi]<=0) bubPos[bi*3+1]=-999; } }
+  bubGeo.attributes.position.needsUpdate=true;
+  for(var si=0;si<SNOW;si++){ snowPos[si*3+1]+=Math.sin(worldT*0.3+si)*0.0006; snowPos[si*3]+=0.0008; if(snowPos[si*3]>5) snowPos[si*3]=-5; }
+  snowGeo.attributes.position.needsUpdate=true;
+  if(S.floating){ var fy=waveH(head.position.x,head.position.z,worldT,U.amp.value)+0.22; head.position.y+=(fy-head.position.y)*Math.min(1,dt*2.5); }
+  var hy=headYaw(), dY=Math.atan2(Math.sin(hy-bodyYaw),Math.cos(hy-bodyYaw)); if(Math.abs(dY)>0.6) bodyYaw+=dY*Math.min(1,dt*2);
+  body.position.set(head.position.x+Math.sin(bodyYaw)*0.0, sandH(head.position.z), head.position.z); body.rotation.y=bodyYaw;
+  if(lifebuoy.visible){ LIFEBUOY.set(head.position.x+1.2,0,head.position.z-0.6); LIFEBUOY.y=waveH(LIFEBUOY.x,LIFEBUOY.z,worldT,U.amp.value)+0.03; lifebuoy.position.copy(LIFEBUOY); lifebuoy.rotation.y=Math.sin(worldT*0.7)*0.2; }
+  if(target.visible){ target.lookAt(head.position); var pu=1+0.08*Math.sin(worldT*3.2); target.scale.set(pu,pu,pu); }
+  vig.material.opacity+=(vigTarget*0.9-vig.material.opacity)*Math.min(1,dt*3); vig.visible=vig.material.opacity>0.01;
+  var feetY=sandH(head.position.z), up=tide(worldT)>feetY+0.005;
+  if(up && !lastTideUp && S.running && S.level<=1 && !S.walking && feetY>-0.05) footSplash();
+  lastTideUp=up;
+  worldT+=dt; U.t.value=worldT;
+  U.amp.value+=(S.ampTarget-U.amp.value)*Math.min(1,dt*0.35);
+  sky.position.copy(head.position);
+  head.updateMatrixWorld(true);
+  var cp=new THREE.Vector3(); monoCam.getWorldPosition(cp); U.cam.value.copy(cp);
+  U.under.value = cp.y < waveH(cp.x,cp.z,worldT,U.amp.value)-0.02 ? 1 : 0;
+  tintMat.opacity += ((U.under.value?0.28:0)-tintMat.opacity)*Math.min(1,dt*6); tint.visible=tintMat.opacity>0.01;
+  buoys.forEach(function(b){
+    var p=b.g.position; p.y=waveH(p.x,p.z,worldT,U.amp.value)+0.05; b.g.rotation.z=0.12*Math.sin(worldT*1.1+p.z); b.g.rotation.x=0.1*Math.cos(worldT*0.9+p.z);
+    var pulse=b.next?0.2+0.2*Math.sin(worldT*3):0; b.mat.emissive.setRGB(0.23+pulse,0.1+pulse*0.45,0);
+  });
+  fishes.forEach(function(f){
+    if(!f.visible) return; var u=f.userData; u.ph+=u.sp*dt;
+    var x=head.position.x+Math.cos(u.ph)*u.r, z=head.position.z+Math.sin(u.ph)*u.r;
+    f.position.set(x, waveH(x,z,worldT,U.amp.value)+u.dy, z);
+    f.rotation.y=-u.ph+(u.sp>0?-Math.PI/2:Math.PI/2); u.tail.rotation.y=0.5*Math.sin(worldT*9+u.ph*5);
+    if(u.glow>0){ u.glow=Math.max(0,u.glow-dt*0.8); var sc=1+u.glow*0.6; f.scale.set(sc,sc,sc); u.body.material.emissive.setRGB(u.glow*0.5,u.glow*0.5,u.glow*0.4); }
+  });
+}
+function draw(){
+  var w=window.innerWidth, h=window.innerHeight;
+  if(S.stereo){
+    renderer.setScissorTest(true);
+    [[camL,0],[camR,w/2]].forEach(function(p){ p[0].aspect=(w/2)/h; p[0].updateProjectionMatrix(); renderer.setViewport(p[1],0,w/2,h); renderer.setScissor(p[1],0,w/2,h); renderer.render(scene,p[0]); });
+    renderer.setScissorTest(false);
+  } else { monoCam.aspect=w/h; monoCam.fov=w<h?88:70; monoCam.updateProjectionMatrix(); renderer.setViewport(0,0,w,h); renderer.render(scene,monoCam); }
+}
+function frame(now){
+  if(!S.running) return; requestAnimationFrame(frame);
+  var dt=Math.min(0.1,(now-lastT)/1000||0); lastT=now;
+  updateHead();
+  if(!S.paused){ S.clock+=dt*FAST(); tickWaiters(); updateBreath(dt*FAST()); }
+  updateWorld(dt);
+  var yaw=headYaw(), diff=Math.atan2(Math.sin(yaw-ctrlGroup.rotation.y),Math.cos(yaw-ctrlGroup.rotation.y));
+  if(Math.abs(diff)>1.0) ctrlGroup.rotation.y+=diff*Math.min(1,dt*3);
+  ctrlGroup.position.copy(head.position);
+  updateVeil(); updateGaze(dt); updateListener(); draw();
+}
+
+/* Prévia estática na página inicial */
+function drawPreview(){
+  if(S.running) return;
+  standAt(1); head.position.z=4; head.position.y=sandH(4)+EYE; head.quaternion.setFromEuler(new THREE.Euler(-0.2,0.55,0,'YXZ')); reticle.visible=false;
+  worldT=12; veilMat.opacity=0; veil.visible=false; fishes.forEach(function(f){ f.visible=false; });
+  renderer.setSize(960,540,false); monoCam.aspect=960/540; monoCam.fov=62; monoCam.updateProjectionMatrix();
+  updateWorld(0); renderer.setViewport(0,0,960,540); renderer.render(scene,monoCam);
+  try{ $('#preview').getContext('2d').drawImage(canvas,0,0,960,540); }catch(e){}
+  reticle.visible=true;
+}
+drawPreview();
+
+/* ---------- Entrar e sair ---------- */
+var wake=null, exitTimer=null, wentFull=false;
+function flashExit(){ var b=$('#exitBtn'); b.hidden=false; clearTimeout(exitTimer); exitTimer=setTimeout(function(){ if(S.stereo) b.hidden=true; },3000); }
+function enterVR(stereo){
+  S.token++; S.stereo=stereo; S.running=true; S.paused=false; S.clock=0; S.waiters=[]; S.breathing=false; S.ampTarget=1;
+  recentered=false; dragYaw=0; dragPitch=0; head.quaternion.identity(); veilMat.opacity=1; fade={from:1,to:1,t0:0,dur:0};
+  try{ if(window.speechSynthesis){ var u=new SpeechSynthesisUtterance(' '); u.volume=0; speechSynthesis.speak(u); } }catch(e){}
+  startAudio();
+  $('#home').hidden=true; $('#vr').hidden=false; $('#divider').hidden=!stereo; $('#exitBtn').hidden=stereo; $('#hint').hidden=true;
+  if(stereo){
+    var el=document.documentElement;
+    try{ var pr=(el.requestFullscreen||el.webkitRequestFullscreen).call(el); if(pr&&pr.then) pr.then(function(){ wentFull=true; return screen.orientation&&screen.orientation.lock?screen.orientation.lock('landscape'):null; }).catch(function(){}); }catch(e){}
+  }
+  try{ if(navigator.wakeLock) navigator.wakeLock.request('screen').then(function(l){ wake=l; }).catch(function(){}); }catch(e){}
+  resize(); buildControls(); clearPhase(); showSub('');
+  setTimeout(function(){ if(S.running&&!gyro.has&&!S.stereo) $('#hint').hidden=false; },1500);
+  lastT=performance.now(); requestAnimationFrame(frame);
+  run().catch(function(){});
+}
+function exitVR(){
+  if(!S.running) return;
+  S.running=false; S.token++; tickWaiters(); S.breathing=false; breath.visible=false;
+  try{ speechSynthesis.cancel(); }catch(e){}
+  if(actx) actx.suspend();
+  if(wake){ try{ wake.release(); }catch(e){} wake=null; }
+  if(document.fullscreenElement){ try{ document.exitFullscreen(); }catch(e){} }
+  wentFull=false; $('#vr').hidden=true; $('#home').hidden=false; renderResult();
+}
+document.addEventListener('fullscreenchange',function(){ if(!document.fullscreenElement&&wentFull&&S.running) exitVR(); });
+document.addEventListener('visibilitychange',function(){ if(document.hidden&&S.running&&!S.paused) togglePause(); });
+$('#goStereo').addEventListener('click',function(){ enterVR(true); });
+$('#goMono').addEventListener('click',function(){ enterVR(false); });
+$('#exitBtn').addEventListener('click',exitVR);
+})();
+</script>
+
+</body></html>
