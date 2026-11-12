@@ -1,0 +1,606 @@
+<title>Praia Calma VR</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Layout: uma coluna calma — prévia do horizonte no topo, dois botões de entrada, passos de uso, resultado da última sessão. */
+:root{
+  --bg:#edf3f2; --surface:#ffffff; --fg:#10292d; --muted:#4f6b6e; --line:#cddbd9;
+  --accent:#0d7774; --accent-fg:#ffffff; --sand:#efe2c8; --warm:#b8642c;
+  --font-display:"Sora","Segoe UI",system-ui,sans-serif;
+  --font-body:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0a181b; --surface:#11262a; --fg:#e2eeec; --muted:#93acaa; --line:#22403f;
+    --accent:#4fc2b7; --accent-fg:#06201f; --sand:#3a3222; --warm:#e8a06a; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0a181b; --surface:#11262a; --fg:#e2eeec; --muted:#93acaa; --line:#22403f;
+  --accent:#4fc2b7; --accent-fg:#06201f; --sand:#3a3222; --warm:#e8a06a; color-scheme:dark;
+}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:16px;line-height:1.55}
+.home{max-width:640px;margin:0 auto;padding-block:20px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:28px}
+.hero{display:flex;flex-direction:column;gap:14px}
+.hero canvas{display:block;width:100%;max-width:100%;aspect-ratio:16/9;border-radius:14px;background:#5d7fa8}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+h1{font-family:var(--font-display);font-weight:600;font-size:clamp(28px,7vw,40px);line-height:1.1;margin:0;text-wrap:balance}
+h2{font-family:var(--font-display);font-weight:600;font-size:19px;margin:0;text-wrap:balance}
+p{margin:0;max-width:65ch}
+.lead{color:var(--muted)}
+.actions{display:flex;flex-wrap:wrap;gap:12px}
+button{font:inherit;cursor:pointer}
+.btn{flex:1 1 200px;min-height:56px;border-radius:12px;font-weight:600;font-size:17px;border:2px solid var(--accent);padding:10px 18px}
+.btn-primary{background:var(--accent);color:var(--accent-fg)}
+.btn-secondary{background:transparent;color:var(--accent)}
+.btn:focus-visible,.chk input:focus-visible,.exit:focus-visible{outline:3px solid var(--warm);outline-offset:2px}
+.chk{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:15px}
+.chk input{width:20px;height:20px;accent-color:var(--accent)}
+section{display:flex;flex-direction:column;gap:12px}
+ol.steps{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:8px}
+ol.steps li{padding-left:4px}
+.note{font-size:14px;color:var(--muted);border-left:3px solid var(--line);padding-left:12px}
+.result{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:14px}
+.scores{display:flex;align-items:baseline;gap:14px;font-family:var(--font-display);font-variant-numeric:tabular-nums}
+.scores .n{font-size:40px;font-weight:600;line-height:1}
+.scores .lbl{display:block;font-family:var(--font-body);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.scores .arrow{font-size:26px;color:var(--muted)}
+.delta{font-size:14px;font-weight:600;padding:2px 10px;border-radius:999px;background:var(--sand);color:var(--fg);align-self:center}
+.slack{display:grid;grid-template-columns:40px 1fr;gap:10px;font-size:15px;border-top:1px solid var(--line);padding-top:14px}
+.slack .av{width:40px;height:40px;border-radius:8px;background:var(--accent);color:var(--accent-fg);display:grid;place-items:center;font-weight:700;font-size:13px}
+.slack .who{font-weight:700}
+.slack .who small{font-weight:400;color:var(--muted);margin-left:6px}
+.slack .msg{min-width:0}
+.tag{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.empty{color:var(--muted);font-size:15px}
+
+/* Tela imersiva: sempre escura, como uma sala de cinema */
+#vr{position:fixed;inset:0;background:#000;z-index:50;touch-action:none}
+#vr canvas{display:block;width:100%;height:100%}
+#vr .exit{position:absolute;top:calc(env(safe-area-inset-top,0px) + 12px);left:max(12px,env(safe-area-inset-left,0px));background:rgba(8,24,27,.7);color:#e2eeec;border:1px solid rgba(255,255,255,.3);border-radius:10px;padding:10px 16px;font-weight:600}
+#vr .hint{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 18px);background:rgba(8,24,27,.7);color:#e2eeec;padding:8px 14px;border-radius:999px;font-size:14px;white-space:nowrap;pointer-events:none}
+#vr .divider{position:absolute;top:0;bottom:0;left:50%;width:2px;margin-left:-1px;background:#000;pointer-events:none}
+#vr .rotate{position:absolute;inset:0;display:grid;place-items:center;background:#06181b;color:#e2eeec;text-align:center;padding:24px;font-size:20px;font-family:var(--font-display)}
+@media (prefers-reduced-motion: reduce){ *{scroll-behavior:auto} }
+</style>
+
+<main class="home" id="home">
+  <div class="hero">
+    <canvas id="preview" width="960" height="540" aria-label="Prévia do ambiente: praia ao entardecer"></canvas>
+    <span class="eyebrow">Teste · Relaxamento · cerca de 2 minutos</span>
+    <h1>Praia Calma</h1>
+    <p class="lead">Uma praia em 360° com som do mar, narração e respiração guiada. Antes e depois, o paciente marca a ansiedade de 0 a 10 só com o olhar.</p>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-primary" id="goStereo" type="button">Modo óculos</button>
+    <button class="btn btn-secondary" id="goMono" type="button">Ver no celular</button>
+  </div>
+  <label class="chk"><input type="checkbox" id="narr" checked> Narração por voz</label>
+
+  <section>
+    <h2>Como testar no óculos</h2>
+    <ol class="steps">
+      <li>Aumente o volume e toque em <strong>Modo óculos</strong>.</li>
+      <li>Gire o celular na horizontal e encaixe no visor.</li>
+      <li>Olhe ao redor. Para escolher, mantenha o ponto branco sobre um botão até o círculo fechar.</li>
+      <li>Para pausar ou sair, olhe para baixo, perto dos pés.</li>
+    </ol>
+    <p class="note">Dentro do app do Claude o giroscópio fica bloqueado, então ali você arrasta com o dedo para olhar. No Galaxy S7, abra o link direto no Chrome para o óculos seguir o movimento da cabeça.</p>
+  </section>
+
+  <section>
+    <h2>Resultado da última sessão</h2>
+    <div class="result" id="result"></div>
+  </section>
+</main>
+
+<div id="vr" hidden>
+  <canvas id="gl"></canvas>
+  <div class="divider" id="divider" hidden></div>
+  <button class="exit" id="exitBtn" type="button">Sair</button>
+  <div class="hint" id="hint" hidden>Arraste para olhar ao redor</div>
+  <div class="rotate" id="rotate" hidden>Gire o celular na horizontal</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+"use strict";
+var $ = function(s){ return document.querySelector(s); };
+var store = {
+  get: function(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } },
+  set: function(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+};
+
+/* ---------- Panorama equirretangular desenhado em código ---------- */
+function rng(seed){ return function(){ seed = (seed*16807) % 2147483647; return (seed-1)/2147483646; }; }
+function smooth(x){ x = Math.max(0, Math.min(1, x)); return x*x*(3-2*x); }
+
+function makePano(){
+  var W=4096, H=2048, c=document.createElement('canvas'); c.width=W; c.height=H;
+  var g=c.getContext('2d'), R=rng(42), HZ=H*0.5, SHORE=H*0.6, i, x, y, gr;
+  // céu
+  gr=g.createLinearGradient(0,0,0,HZ);
+  gr.addColorStop(0,'#1b3354'); gr.addColorStop(0.42,'#5a7ca6'); gr.addColorStop(0.78,'#e3ad8a'); gr.addColorStop(1,'#f7d8b1');
+  g.fillStyle=gr; g.fillRect(0,0,W,HZ+2);
+  // sol à frente (u = 0.5)
+  var sx=W*0.5, sy=HZ-150;
+  gr=g.createRadialGradient(sx,sy,0,sx,sy,760);
+  gr.addColorStop(0,'rgba(255,238,205,0.95)'); gr.addColorStop(0.12,'rgba(255,216,165,0.55)'); gr.addColorStop(1,'rgba(255,200,150,0)');
+  g.fillStyle=gr; g.fillRect(sx-760,sy-760,1520,1520);
+  g.fillStyle='#fff4de'; g.beginPath(); g.arc(sx,sy,46,0,Math.PI*2); g.fill();
+  // nuvens
+  for(i=0;i<34;i++){
+    var cx=R()*W, cy=H*0.1+R()*H*0.32, cw=180+R()*460, a=0.08+R()*0.14;
+    for(var k=-1;k<=1;k++){
+      for(var b=0;b<5;b++){
+        g.fillStyle='rgba(255,236,222,'+a+')';
+        g.beginPath(); g.ellipse(cx+k*W+(b-2)*cw*0.18, cy+(R()-0.5)*10, cw*0.32, cw*0.06, 0, 0, Math.PI*2); g.fill();
+      }
+    }
+  }
+  // morro distante à esquerda
+  g.fillStyle='rgba(92,112,140,0.75)'; g.beginPath(); g.moveTo(W*0.26,HZ);
+  for(x=W*0.26;x<=W*0.42;x+=16){ var t=(x-W*0.26)/(W*0.16); g.lineTo(x, HZ-Math.sin(t*Math.PI)*46-Math.sin(t*9)*5); }
+  g.lineTo(W*0.42,HZ); g.fill();
+  // mar
+  gr=g.createLinearGradient(0,HZ,0,SHORE);
+  gr.addColorStop(0,'#c6a08e'); gr.addColorStop(0.35,'#6f8f98'); gr.addColorStop(1,'#2d6571');
+  g.fillStyle=gr; g.fillRect(0,HZ,W,SHORE-HZ);
+  for(i=0;i<1600;i++){
+    var d=R(); y=HZ+d*d*(SHORE-HZ); x=R()*W;
+    g.fillStyle=R()<0.5?'rgba(255,255,255,0.08)':'rgba(10,40,50,0.10)';
+    g.fillRect(x,y,14+d*130,1+d*2.5);
+  }
+  // reflexo do sol na água
+  for(i=0;i<700;i++){
+    var dy=R(); y=HZ+dy*(SHORE-HZ); var spread=24+dy*260;
+    x=sx+(R()-0.5)*2*spread*R();
+    g.fillStyle='rgba(255,230,190,'+(0.2+R()*0.55)+')';
+    g.fillRect(x,y,6+R()*36*(0.3+dy),1.5+R()*2);
+  }
+  // areia
+  gr=g.createLinearGradient(0,SHORE,0,H);
+  gr.addColorStop(0,'#a98e6d'); gr.addColorStop(0.1,'#d6bd95'); gr.addColorStop(0.5,'#e6d1aa'); gr.addColorStop(1,'#d3b98e');
+  g.fillStyle=gr; g.fillRect(0,SHORE,W,H-SHORE);
+  for(i=0;i<26000;i++){
+    g.fillStyle=R()<0.5?'rgba(110,80,50,0.12)':'rgba(255,255,255,0.14)';
+    g.fillRect(R()*W, SHORE+R()*(H-SHORE), 2, 2);
+  }
+  // espuma da beira
+  g.lineCap='round';
+  [[0,'rgba(255,255,255,0.75)',6],[16,'rgba(255,255,255,0.3)',4]].forEach(function(f){
+    g.strokeStyle=f[1]; g.lineWidth=f[2]; g.beginPath();
+    for(x=0;x<=W;x+=8){ y=SHORE+f[0]+Math.sin(x/90)*6+Math.sin(x/37)*3; if(x===0) g.moveTo(x,y); else g.lineTo(x,y); }
+    g.stroke();
+  });
+  // vegetação e coqueiros atrás (u = 0 / 1), desenhados nas duas bordas para fechar a volta
+  function land(off){
+    gr=g.createLinearGradient(0,HZ-160,0,SHORE+40);
+    gr.addColorStop(0,'#3b5238'); gr.addColorStop(1,'#6e7b4e');
+    g.fillStyle=gr; g.beginPath(); g.moveTo(off-1000,SHORE+40);
+    for(x=-1000;x<=1000;x+=10){
+      var bump=smooth(1-Math.abs(x)/1000);
+      g.lineTo(off+x, SHORE-(SHORE-HZ+150)*bump + Math.sin(x/23)*6*bump);
+    }
+    g.lineTo(off+1000,SHORE+40); g.fill();
+    // faixa de areia de duna na frente da vegetação
+    g.fillStyle='rgba(214,189,149,0.9)'; g.beginPath(); g.moveTo(off-1000,SHORE+60);
+    for(x=-1000;x<=1000;x+=20){ g.lineTo(off+x, SHORE+22+Math.sin(x/140)*8); }
+    g.lineTo(off+1000,SHORE+60); g.fill();
+    [[-520,300],[-300,250],[160,330],[420,270],[-60,200]].forEach(function(p){
+      var bx=off+p[0], by=SHORE+26, h=p[1], tx=bx+h*0.16, ty=by-h;
+      g.strokeStyle='#2a2925'; g.lineWidth=13; g.beginPath(); g.moveTo(bx,by); g.quadraticCurveTo(bx-12,by-h*0.6,tx,ty); g.stroke();
+      g.strokeStyle='#26332a'; g.lineWidth=9;
+      for(var f=0;f<8;f++){
+        var ang=-Math.PI+f*(Math.PI/7)+0.1, len=90+(f%3)*24;
+        var ex=tx+Math.cos(ang)*len, ey=ty+Math.sin(ang)*len*0.45+40;
+        g.beginPath(); g.moveTo(tx,ty); g.quadraticCurveTo(tx+Math.cos(ang)*len*0.5, ty-30, ex, ey); g.stroke();
+      }
+    });
+  }
+  land(0); land(W);
+  return c;
+}
+
+var pano = makePano();
+(function drawPreview(){
+  var pc=$('#preview'), g=pc.getContext('2d');
+  var sw=pano.width*0.4, sh=sw*9/16, sx=pano.width*0.3, sy=pano.height*0.5-sh*0.55;
+  g.drawImage(pano, sx, sy, sw, sh, 0, 0, pc.width, pc.height);
+})();
+
+/* ---------- Resultado e aviso de exemplo ---------- */
+function renderResult(){
+  var r=store.get('praia-calma:last'), box=$('#result');
+  if(!r){
+    box.innerHTML='<p class="empty">Faça a sessão para ver aqui a nota de ansiedade de antes e de depois, e o aviso que a Carla receberia no Slack.</p>';
+    return;
+  }
+  var diff=r.post-r.pre, when=new Date(r.at);
+  var hh=String(when.getHours()).padStart(2,'0')+':'+String(when.getMinutes()).padStart(2,'0');
+  var dTxt = diff<0 ? (diff+' pontos') : diff>0 ? ('+'+diff+' pontos') : 'sem mudança';
+  var resumo = diff<0
+    ? 'A ansiedade caiu '+(-diff)+' ponto'+(diff===-1?'':'s')+' depois da respiração guiada. Vale repetir o exercício na próxima sessão.'
+    : diff>0
+      ? 'A ansiedade subiu '+diff+' ponto'+(diff===1?'':'s')+'. Vale conversar sobre a experiência antes de repetir.'
+      : 'A ansiedade ficou igual. Vale testar uma sessão mais longa ou outro ambiente.';
+  box.innerHTML =
+    '<div class="scores"><div><span class="lbl">Antes</span><span class="n">'+r.pre+'</span></div>'+
+    '<span class="arrow" aria-hidden="true">→</span>'+
+    '<div><span class="lbl">Depois</span><span class="n">'+r.post+'</span></div>'+
+    '<span class="delta">'+dTxt+'</span></div>'+
+    '<div class="slack"><div class="av" aria-hidden="true">VR</div><div class="msg">'+
+    '<div class="tag">Exemplo do aviso no Slack</div>'+
+    '<div class="who">Consultório VR <small>'+hh+'</small></div>'+
+    '<div>Paciente <strong>P-TESTE</strong> concluiu “Praia Calma”. Ansiedade '+r.pre+' → '+r.post+'.</div>'+
+    '<div style="color:var(--muted);margin-top:4px">Resumo: '+resumo+'</div>'+
+    '</div></div>';
+}
+renderResult();
+
+/* ---------- Cena 3D ---------- */
+if(!window.THREE){ $('#goStereo').disabled=true; $('#goMono').disabled=true; return; }
+var canvas=$('#gl');
+var renderer=new THREE.WebGLRenderer({canvas:canvas, antialias:false});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, 1.5));
+var scene=new THREE.Scene();
+var head=new THREE.Object3D(); scene.add(head);
+var monoCam=new THREE.PerspectiveCamera(70,1,0.05,1000); head.add(monoCam);
+var IPD=0.064;
+var camL=new THREE.PerspectiveCamera(90,1,0.05,1000); camL.position.x=-IPD/2; head.add(camL);
+var camR=new THREE.PerspectiveCamera(90,1,0.05,1000); camR.position.x= IPD/2; head.add(camR);
+
+var panoTex=new THREE.CanvasTexture(pano);
+panoTex.minFilter=THREE.LinearFilter; panoTex.generateMipmaps=false;
+var skyMat=new THREE.ShaderMaterial({
+  uniforms:{ map:{value:panoTex}, t:{value:0} },
+  vertexShader:'varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }',
+  fragmentShader:[
+    'precision highp float;',
+    'uniform sampler2D map; uniform float t; varying vec2 vUv;',
+    'void main(){',
+    '  vec2 uv=vUv;',
+    '  float sea=step(0.4,uv.y)*step(uv.y,0.5);',
+    '  float depth=clamp((0.5-uv.y)/0.1,0.0,1.0);',
+    '  uv.x+=sea*sin(uv.y*900.0+t*1.2)*0.0006*(0.3+depth);',
+    '  vec4 col=texture2D(map,uv);',
+    '  float sunCol=exp(-pow((uv.x-0.5)*14.0/(0.2+depth),2.0));',
+    '  float sp=pow(max(0.0,sin(uv.x*2600.0+t*1.7+uv.y*300.0)*sin(uv.y*1800.0-t*2.3)),24.0);',
+    '  col.rgb+=sea*sp*sunCol*0.6;',
+    '  float foamY=0.4+0.0025*sin(6.2831*0.11*t);',
+    '  col.rgb+=exp(-pow((uv.y-foamY)*700.0,2.0))*0.22;',
+    '  gl_FragColor=col;',
+    '}'
+  ].join('\n')
+});
+var skyGeo=new THREE.SphereGeometry(500,64,40); skyGeo.scale(-1,1,1);
+var sky=new THREE.Mesh(skyGeo, skyMat); sky.rotation.y=-Math.PI/2; scene.add(sky);
+
+/* Retícula do olhar */
+var reticle=new THREE.Group(); reticle.position.z=-2.8; head.add(reticle);
+var dot=new THREE.Mesh(new THREE.RingGeometry(0.03,0.05,32), new THREE.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:0.9, depthTest:false}));
+var prog=new THREE.Mesh(new THREE.RingGeometry(0.065,0.09,32,1), new THREE.MeshBasicMaterial({color:0x4fc2b7, depthTest:false}));
+dot.renderOrder=prog.renderOrder=999; reticle.add(dot); reticle.add(prog);
+prog.geometry.setDrawRange(0,0);
+
+/* Painéis com texto */
+var FONT='"Sora","Inter",system-ui,sans-serif';
+function wrap(g,text,maxW){
+  var words=text.split(' '), lines=[], line='';
+  words.forEach(function(w){ var test=line?line+' '+w:w; if(g.measureText(test).width>maxW && line){ lines.push(line); line=w; } else line=test; });
+  if(line) lines.push(line); return lines;
+}
+function roundRect(g,x,y,w,h,r){ g.beginPath(); g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r); g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath(); }
+function makeCanvasMesh(w,h,draw){
+  var PX=420, c=document.createElement('canvas'); c.width=Math.round(w*PX); c.height=Math.round(h*PX);
+  var g=c.getContext('2d'), tex=new THREE.CanvasTexture(c); tex.minFilter=THREE.LinearFilter; tex.generateMipmaps=false;
+  var mesh=new THREE.Mesh(new THREE.PlaneGeometry(w,h), new THREE.MeshBasicMaterial({map:tex, transparent:true, depthWrite:false}));
+  mesh.userData.redraw=function(){ g.clearRect(0,0,c.width,c.height); draw(g,c.width,c.height,mesh.userData); tex.needsUpdate=true; };
+  mesh.userData.redraw();
+  return mesh;
+}
+function card(w,h,title,body){
+  return makeCanvasMesh(w,h,function(g,W,H,ud){
+    roundRect(g,4,4,W-8,H-8,36); g.fillStyle='rgba(8,26,30,0.78)'; g.fill();
+    g.textAlign='center'; g.textBaseline='middle';
+    var t=ud.title!==undefined?ud.title:title, b=ud.body!==undefined?ud.body:body;
+    var TF=60, BF=42, TL=72, BL=54, GAP=14, lines=[];
+    g.font='600 '+TF+'px '+FONT; var tl=t?wrap(g,t,W*0.9):[];
+    g.font='400 '+BF+'px '+FONT; var bl=b?wrap(g,b,W*0.88):[];
+    var total=tl.length*TL+(tl.length&&bl.length?GAP:0)+bl.length*BL, y=(H-total)/2;
+    g.fillStyle='#ffffff'; g.font='600 '+TF+'px '+FONT;
+    tl.forEach(function(l){ g.fillText(l,W/2,y+TL/2); y+=TL; });
+    if(tl.length&&bl.length) y+=GAP;
+    g.fillStyle='rgba(255,255,255,0.86)'; g.font='400 '+BF+'px '+FONT;
+    bl.forEach(function(l){ g.fillText(l,W/2,y+BL/2); y+=BL; });
+  });
+}
+function button(label,w,h,onSelect,ring){
+  var m=makeCanvasMesh(w,h,function(g,W,H,ud){
+    roundRect(g,6,6,W-12,H-12,Math.min(28,H*0.3));
+    g.fillStyle=ud.hover?'#4fc2b7':'rgba(8,26,30,0.82)'; g.fill();
+    g.lineWidth=6; g.strokeStyle=ring||'rgba(255,255,255,0.55)'; g.stroke();
+    g.fillStyle=ud.hover?'#06201f':'#ffffff'; g.textAlign='center'; g.textBaseline='middle';
+    g.font='600 '+Math.round(H*0.42)+'px '+FONT; g.fillText(ud.label,W/2,H*0.53);
+  });
+  m.userData.label=label; m.userData.button=true; m.userData.onSelect=onSelect; m.userData.redraw();
+  m.userData.setHover=function(v){ if(m.userData.hover!==v){ m.userData.hover=v; m.userData.redraw(); } };
+  return m;
+}
+function placeAt(obj,parent,yawDeg,y,dist){
+  var a=yawDeg*Math.PI/180;
+  obj.position.set(Math.sin(a)*dist, y, -Math.cos(a)*dist);
+  parent.add(obj); obj.lookAt(0,y*0.4,0);
+  return obj;
+}
+
+/* ---------- Estado da sessão ---------- */
+var phaseGroup=new THREE.Group(); scene.add(phaseGroup);
+var ctrlGroup=new THREE.Group(); scene.add(ctrlGroup);
+var breath=new THREE.Group(); breath.visible=false;
+var ringMesh=new THREE.Mesh(new THREE.RingGeometry(0.62,0.7,64), new THREE.MeshBasicMaterial({color:0xfff1dc, transparent:true, opacity:0.9, depthWrite:false}));
+var discMesh=new THREE.Mesh(new THREE.CircleGeometry(0.62,64), new THREE.MeshBasicMaterial({color:0xfff1dc, transparent:true, opacity:0.14, depthWrite:false}));
+var breathScale=new THREE.Group(); breathScale.add(discMesh); breathScale.add(ringMesh); breath.add(breathScale);
+var breathLabel=card(1.0,0.22,'Inspire',''); breathLabel.position.set(0,-0.88,0.01); breath.add(breathLabel);
+var subtitle=null;
+
+var S={ running:false, stereo:false, phase:'', pre:null, post:null, t:0, paused:false, lastCue:'' };
+var BREATH_START=18, CYCLE=10, CYCLES=6, BREATH_END=BREATH_START+CYCLE*CYCLES;
+
+function headYawDeg(){ var e=new THREE.Euler().setFromQuaternion(head.quaternion,'YXZ'); return e.y*180/Math.PI; }
+function resetGroup(grp){ while(grp.children.length) grp.remove(grp.children[0]); grp.rotation.set(0,0,0); grp.updateMatrixWorld(true); }
+
+function say(text){
+  if(subtitle){ subtitle.userData.title=text; subtitle.userData.redraw(); }
+  if(!$('#narr').checked || !window.speechSynthesis) return;
+  try{
+    speechSynthesis.cancel();
+    var u=new SpeechSynthesisUtterance(text); u.lang='pt-BR'; u.rate=0.9; u.pitch=1;
+    var vs=speechSynthesis.getVoices().filter(function(v){ return /^pt[-_]BR/i.test(v.lang); });
+    if(!vs.length) vs=speechSynthesis.getVoices().filter(function(v){ return /^pt/i.test(v.lang); });
+    if(vs.length) u.voice=vs[0];
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+
+function scaleArc(question, onPick){
+  placeAt(card(2.4,0.5,question,'0 = calmo · 10 = muito ansioso'), phaseGroup, 0, 0.0, 3);
+  for(var i=0;i<=10;i++){
+    (function(n){
+      var hue=170-n*15;
+      placeAt(button(String(n),0.3,0.3,function(){ onPick(n); },'hsl('+hue+',70%,62%)'), phaseGroup, (n-5)*6.8, -0.5, 3);
+    })(i);
+  }
+}
+
+function goPhase(p){
+  S.phase=p; resetGroup(phaseGroup); breath.visible=false; subtitle=null;
+  if(p==='intro'){
+    placeAt(card(2.3,0.74,'Praia Calma','Para escolher, mantenha o ponto branco no botão até o círculo fechar. Olhe para baixo para pausar ou sair.'), phaseGroup, 0, -0.02, 3);
+    placeAt(button('Começar',0.9,0.28,function(){ goPhase('pre'); }), phaseGroup, 0, -0.62, 3);
+    say('Boas-vindas à praia. Olhe para o botão Começar.');
+  } else if(p==='pre'){
+    scaleArc('Como você está agora?', function(n){ S.pre=n; goPhase('guided'); });
+    say('Antes de começar, como você está agora? Zero é calmo e dez é muito ansioso.');
+  } else if(p==='guided'){
+    S.t=0; S.fired={}; S.lastCue='';
+    subtitle=placeAt(card(2.8,0.3,' ',''), phaseGroup, 0, -0.75, 3.2);
+    breath.position.set(0,0.92,-4); phaseGroup.add(breath);
+  } else if(p==='post'){
+    scaleArc('E agora, como você está?', function(n){ S.post=n; finish(); });
+    say('E agora, como você está? Zero é calmo e dez é muito ansioso.');
+  } else if(p==='end'){
+    var d=S.post-S.pre;
+    placeAt(card(2.3,0.52,'Sessão concluída','Antes: '+S.pre+'   ·   Agora: '+S.post+(d<0?'   ·   '+d+' pontos':'')), phaseGroup, 0, -0.05, 3);
+    placeAt(button('Repetir',0.8,0.28,function(){ goPhase('pre'); }), phaseGroup, -8, -0.55, 3);
+    placeAt(button('Sair',0.8,0.28,function(){ exitVR(); }), phaseGroup, 8, -0.55, 3);
+    say('Sessão concluída. Obrigado por respirar com a gente.');
+  }
+  phaseGroup.rotation.y=headYawDeg()*Math.PI/180;
+}
+
+function finish(){
+  store.set('praia-calma:last',{pre:S.pre, post:S.post, at:Date.now()});
+  renderResult(); goPhase('end');
+}
+
+var guidedEvents=[
+  [0.6,function(){ say('Você está numa praia tranquila. Fique à vontade para olhar ao redor.'); }],
+  [8,function(){ say('Ouça o som do mar à sua frente. Repare no horizonte.'); }],
+  [14,function(){ say('Agora vamos respirar juntos. Acompanhe o círculo.'); }],
+  [BREATH_START,function(){ breath.visible=true; }],
+  [BREATH_END,function(){ breath.visible=false; }],
+  [BREATH_END+1,function(){ say('Muito bem. Perceba como o seu corpo está agora.'); }],
+  [BREATH_END+8,function(){ goPhase('post'); }]
+];
+function ease(x){ return 0.5-0.5*Math.cos(Math.PI*x); }
+function updateGuided(dt){
+  if(S.paused) return;
+  S.t+=dt*(location.hash==='#rapido'?10:1);
+  guidedEvents.forEach(function(ev,i){ if(!S.fired[i] && S.t>=ev[0]){ S.fired[i]=true; ev[1](); } });
+  if(S.phase!=='guided') return;
+  if(S.t>=BREATH_START && S.t<BREATH_END){
+    var bt=S.t-BREATH_START, cyc=Math.floor(bt/CYCLE), p=bt-cyc*CYCLE, s, cue;
+    if(p<4){ s=0.4+0.6*ease(p/4); cue='Inspire'; } else { s=1-0.6*ease((p-4)/6); cue='Solte o ar'; }
+    breathScale.scale.set(s,s,1);
+    var key=cyc+cue;
+    if(key!==S.lastCue){
+      S.lastCue=key; breathLabel.userData.title=cue; breathLabel.userData.redraw();
+      if(cyc<2) say(cue==='Inspire'?'Inspire...':'Solte o ar devagar...');
+      else if(subtitle){ subtitle.userData.title=cue==='Inspire'?'Inspire pelo nariz':'Solte o ar devagar'; subtitle.userData.redraw(); }
+    }
+  }
+}
+
+/* Controles perto dos pés: Pausar e Sair */
+var pauseBtn, exitBtn3d;
+function buildControls(){
+  resetGroup(ctrlGroup);
+  var a=-52*Math.PI/180, dist=2.4, y=Math.sin(a)*dist, z=-Math.cos(a)*dist;
+  pauseBtn=button('Pausar',0.62,0.24,togglePause); pauseBtn.position.set(-0.36,y,z); ctrlGroup.add(pauseBtn); pauseBtn.lookAt(-0.36,0,0);
+  exitBtn3d=button('Sair',0.62,0.24,function(){ exitVR(); }); exitBtn3d.position.set(0.36,y,z); ctrlGroup.add(exitBtn3d); exitBtn3d.lookAt(0.36,0,0);
+}
+function togglePause(){
+  S.paused=!S.paused;
+  pauseBtn.userData.label=S.paused?'Continuar':'Pausar'; pauseBtn.userData.redraw();
+  if(S.paused){ try{ speechSynthesis.cancel(); }catch(e){} if(subtitle){ subtitle.userData.title='Pausado. Olhe para Continuar quando quiser.'; subtitle.userData.redraw(); } }
+}
+
+/* ---------- Áudio: mar com som espacial ---------- */
+var actx=null, master=null;
+function startAudio(){
+  var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
+  if(actx){ actx.resume(); return; }
+  actx=new AC(); master=actx.createGain(); master.gain.value=0.7; master.connect(actx.destination);
+  var len=actx.sampleRate*6, buf=actx.createBuffer(1,len,actx.sampleRate), d=buf.getChannelData(0), last=0;
+  for(var i=0;i<len;i++){ var w=Math.random()*2-1; last=(last+0.02*w)/1.02; d[i]=last*3.5; }
+  var hbuf=actx.createBuffer(1,len,actx.sampleRate), hd=hbuf.getChannelData(0);
+  for(i=0;i<len;i++) hd[i]=Math.random()*2-1;
+  var panner=actx.createPanner(); panner.panningModel='HRTF'; panner.distanceModel='inverse'; panner.refDistance=4;
+  if(panner.positionX){ panner.positionX.value=0; panner.positionY.value=-0.5; panner.positionZ.value=-6; } else panner.setPosition(0,-0.5,-6);
+  panner.connect(master);
+  var wave=actx.createGain(); wave.gain.value=0.5; wave.connect(panner);
+  var lfo=actx.createOscillator(); lfo.frequency.value=0.11; var lfoG=actx.createGain(); lfoG.gain.value=0.38; lfo.connect(lfoG); lfoG.connect(wave.gain); lfo.start();
+  var src=actx.createBufferSource(); src.buffer=buf; src.loop=true;
+  var lp=actx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=800; src.connect(lp); lp.connect(wave); src.start();
+  var hs=actx.createBufferSource(); hs.buffer=hbuf; hs.loop=true;
+  var hp=actx.createBiquadFilter(); hp.type='bandpass'; hp.frequency.value=3000; hp.Q.value=0.6;
+  var hg=actx.createGain(); hg.gain.value=0.05; hs.connect(hp); hp.connect(hg); hg.connect(wave); hs.start();
+}
+var fwd=new THREE.Vector3(), up=new THREE.Vector3();
+function updateListener(){
+  if(!actx) return; var L=actx.listener;
+  fwd.set(0,0,-1).applyQuaternion(head.quaternion); up.set(0,1,0).applyQuaternion(head.quaternion);
+  if(L.forwardX){ L.forwardX.value=fwd.x; L.forwardY.value=fwd.y; L.forwardZ.value=fwd.z; L.upX.value=up.x; L.upY.value=up.y; L.upZ.value=up.z; }
+  else if(L.setOrientation) L.setOrientation(fwd.x,fwd.y,fwd.z,up.x,up.y,up.z);
+}
+
+/* ---------- Movimento da cabeça: giroscópio ou arrastar ---------- */
+var gyro={ has:false, q:new THREE.Quaternion() }, recentered=false, offsetYaw=0, dragYaw=0, dragPitch=0;
+var zee=new THREE.Vector3(0,0,1), eul=new THREE.Euler(), q0=new THREE.Quaternion(), q1=new THREE.Quaternion(-Math.sqrt(0.5),0,0,Math.sqrt(0.5)), qYaw=new THREE.Quaternion();
+function screenAngle(){ var a=(screen.orientation && screen.orientation.angle!=null)?screen.orientation.angle:(window.orientation||0); return a*Math.PI/180; }
+window.addEventListener('deviceorientation',function(e){
+  if(e.alpha==null) return;
+  var D=Math.PI/180;
+  eul.set(e.beta*D, e.alpha*D, -e.gamma*D, 'YXZ');
+  gyro.q.setFromEuler(eul); gyro.q.multiply(q1); gyro.q.multiply(q0.setFromAxisAngle(zee,-screenAngle()));
+  gyro.has=true;
+});
+function recenter(){ var e=new THREE.Euler().setFromQuaternion(gyro.q,'YXZ'); offsetYaw=-e.y; dragYaw=0; recentered=true; }
+function updateHead(){
+  if(gyro.has){
+    if(!recentered) recenter();
+    qYaw.setFromAxisAngle(new THREE.Vector3(0,1,0), offsetYaw+dragYaw);
+    head.quaternion.copy(qYaw).multiply(gyro.q);
+  } else {
+    head.quaternion.setFromEuler(new THREE.Euler(dragPitch,dragYaw,0,'YXZ'));
+  }
+}
+var drag=null;
+canvas.addEventListener('pointerdown',function(e){ drag={x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY}; if(S.stereo) flashExit(); });
+window.addEventListener('pointermove',function(e){
+  if(!drag) return; var k=S.stereo?0.004:0.005;
+  dragYaw+=(e.clientX-drag.x)*k; if(!gyro.has) dragPitch=Math.max(-1.45,Math.min(1.45,dragPitch+(e.clientY-drag.y)*k));
+  drag.x=e.clientX; drag.y=e.clientY;
+});
+window.addEventListener('pointerup',function(e){
+  if(!drag) return; var moved=Math.abs(e.clientX-drag.sx)+Math.abs(e.clientY-drag.sy); drag=null;
+  if(moved<8 && !S.stereo){ // toque direto num botão (atalho na tela do celular)
+    var r=canvas.getBoundingClientRect(), v=new THREE.Vector2(((e.clientX-r.left)/r.width)*2-1, -((e.clientY-r.top)/r.height)*2+1);
+    ray.setFromCamera(v,monoCam); var hit=ray.intersectObjects(interactive(),false)[0];
+    if(hit){ hit.object.userData.onSelect(); gaze.target=null; gaze.time=0; gaze.lock=hit.object; }
+  }
+});
+
+/* ---------- Seleção pelo olhar ---------- */
+var ray=new THREE.Raycaster(), center=new THREE.Vector2(0,0), DWELL=1.6;
+var gaze={ target:null, time:0, lock:null };
+function visibleDeep(o){ while(o){ if(!o.visible) return false; o=o.parent; } return true; }
+function interactive(){
+  var out=[]; [phaseGroup,ctrlGroup].forEach(function(gp){ gp.traverse(function(o){ if(o.userData && o.userData.button && visibleDeep(o)) out.push(o); }); });
+  return out;
+}
+function updateGaze(dt){
+  ray.setFromCamera(center,monoCam);
+  var hit=ray.intersectObjects(interactive(),false)[0], obj=hit?hit.object:null;
+  if(gaze.lock && obj!==gaze.lock) gaze.lock=null;
+  if(obj && obj===gaze.lock) obj=null;
+  if(obj!==gaze.target){ if(gaze.target) gaze.target.userData.setHover(false); gaze.target=obj; gaze.time=0; if(obj) obj.userData.setHover(true); }
+  if(gaze.target){
+    gaze.time+=dt; var f=Math.min(1,gaze.time/DWELL);
+    prog.geometry.setDrawRange(0,Math.floor(f*32)*6);
+    if(f>=1){ var t=gaze.target; t.userData.setHover(false); gaze.lock=t; gaze.target=null; gaze.time=0; prog.geometry.setDrawRange(0,0); t.userData.onSelect(); }
+  } else prog.geometry.setDrawRange(0,0);
+}
+
+/* ---------- Laço de desenho ---------- */
+var lastT=0, clock=0;
+function resize(){
+  var w=window.innerWidth, h=window.innerHeight; renderer.setSize(w,h,false);
+  $('#rotate').hidden=!(S.stereo && h>w);
+}
+window.addEventListener('resize',resize);
+function frame(now){
+  if(!S.running) return;
+  requestAnimationFrame(frame);
+  var dt=Math.min(0.1,(now-lastT)/1000||0); lastT=now; clock+=dt;
+  skyMat.uniforms.t.value=clock;
+  updateHead(); head.updateMatrixWorld(true);
+  if(S.phase==='guided') updateGuided(dt);
+  // controles dos pés acompanham o corpo devagar
+  var yaw=headYawDeg()*Math.PI/180, diff=Math.atan2(Math.sin(yaw-ctrlGroup.rotation.y),Math.cos(yaw-ctrlGroup.rotation.y));
+  if(Math.abs(diff)>1.0) ctrlGroup.rotation.y+=diff*Math.min(1,dt*3);
+  updateGaze(dt); updateListener();
+  var w=window.innerWidth, h=window.innerHeight;
+  if(S.stereo){
+    renderer.setScissorTest(true);
+    [[camL,0],[camR,w/2]].forEach(function(p){
+      p[0].aspect=(w/2)/h; p[0].updateProjectionMatrix();
+      renderer.setViewport(p[1],0,w/2,h); renderer.setScissor(p[1],0,w/2,h); renderer.render(scene,p[0]);
+    });
+    renderer.setScissorTest(false);
+  } else {
+    monoCam.aspect=w/h; monoCam.fov=w<h?88:70; monoCam.updateProjectionMatrix();
+    renderer.setViewport(0,0,w,h); renderer.render(scene,monoCam);
+  }
+}
+
+/* ---------- Entrar e sair ---------- */
+var wake=null, exitTimer=null, wentFull=false;
+function flashExit(){ var b=$('#exitBtn'); b.hidden=false; clearTimeout(exitTimer); exitTimer=setTimeout(function(){ if(S.stereo) b.hidden=true; },3000); }
+function enterVR(stereo){
+  S.stereo=stereo; S.running=true; S.paused=false; recentered=false; dragYaw=0; dragPitch=0;
+  try{ if(window.speechSynthesis){ var u=new SpeechSynthesisUtterance(' '); u.volume=0; speechSynthesis.speak(u); } }catch(e){}
+  startAudio();
+  $('#home').hidden=true; $('#vr').hidden=false;
+  $('#divider').hidden=!stereo; $('#exitBtn').hidden=stereo; $('#hint').hidden=true;
+  if(stereo){
+    var el=document.documentElement;
+    try{ var pr=(el.requestFullscreen||el.webkitRequestFullscreen).call(el); if(pr&&pr.then) pr.then(function(){ wentFull=true; return screen.orientation&&screen.orientation.lock?screen.orientation.lock('landscape'):null; }).catch(function(){}); }catch(e){}
+  }
+  try{ if(navigator.wakeLock) navigator.wakeLock.request('screen').then(function(l){ wake=l; }).catch(function(){}); }catch(e){}
+  resize(); buildControls();
+  setTimeout(function(){ if(S.running && !gyro.has && !S.stereo) $('#hint').hidden=false; },1200);
+  setTimeout(function(){ head.updateMatrixWorld(true); goPhase('intro'); ctrlGroup.rotation.y=headYawDeg()*Math.PI/180; },250);
+  lastT=performance.now(); requestAnimationFrame(frame);
+}
+function exitVR(){
+  if(!S.running) return;
+  S.running=false; S.phase='';
+  try{ speechSynthesis.cancel(); }catch(e){}
+  if(actx) actx.suspend();
+  if(wake){ try{ wake.release(); }catch(e){} wake=null; }
+  if(document.fullscreenElement){ try{ document.exitFullscreen(); }catch(e){} }
+  wentFull=false;
+  $('#vr').hidden=true; $('#home').hidden=false; renderResult();
+}
+document.addEventListener('fullscreenchange',function(){ if(!document.fullscreenElement && wentFull && S.running) exitVR(); });
+document.addEventListener('visibilitychange',function(){ if(document.hidden && S.running && !S.paused && S.phase==='guided') togglePause(); });
+$('#goStereo').addEventListener('click',function(){ enterVR(true); });
+$('#goMono').addEventListener('click',function(){ enterVR(false); });
+$('#exitBtn').addEventListener('click',exitVR);
+})();
+</script>
