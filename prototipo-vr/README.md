@@ -24,3 +24,7 @@ Ao editar, altere `praia-calma.html` e regenere o `index.html` com o mesmo conte
 
 - Abra no **Chrome** do celular, com conexão HTTPS, para o giroscópio funcionar.
 - Acrescente `#rapido` ao fim do endereço para a sessão correr 10 vezes mais rápido (útil para revisar o fluxo).
+
+## Abrir no celular
+
+`qr-celular.png` é um QR code que abre a versão publicada deste teste no navegador do celular.
